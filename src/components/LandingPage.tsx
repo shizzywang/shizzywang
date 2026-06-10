@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useMouseCharge } from '../hooks/useMouseCharge'
 import { HeraldicLogo } from './HeraldicLogo'
 import { Wordmark } from './Wordmark'
 import '../styles/landing.css'
@@ -6,12 +7,24 @@ import '../styles/landing.css'
 export function LandingPage() {
   const [logoHovered, setLogoHovered] = useState(false)
   const [gHovered, setGHovered] = useState(false)
+  const { pulseOpacity, burstActive } = useMouseCharge({
+    enabled: !logoHovered && !gHovered,
+  })
 
   return (
     <div
       className={`landing-page${logoHovered ? ' landing-page--dark' : ''}`}
     >
-      <div className="landing-page__overlay" aria-hidden="true" />
+      <div
+        className={[
+          'landing-page__overlay',
+          !logoHovered && burstActive && 'landing-page__overlay--pulse',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        style={logoHovered ? undefined : { opacity: pulseOpacity }}
+        aria-hidden="true"
+      />
       <main className="landing-page__content">
         <div className="landing-page__hero">
           <Wordmark gHovered={gHovered} onGHoverChange={setGHovered} />

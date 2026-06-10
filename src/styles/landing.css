@@ -22,11 +22,17 @@
   background-color: var(--color-black);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.9s var(--ease-luxury);
+  transition: opacity 0.35s var(--ease-luxury);
+}
+
+.landing-page__overlay--pulse {
+  z-index: 2;
+  transition: none;
 }
 
 .landing-page--dark .landing-page__overlay {
   opacity: 1;
+  transition: opacity 0.9s var(--ease-luxury);
 }
 
 .landing-page__content {

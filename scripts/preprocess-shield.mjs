@@ -9,10 +9,9 @@ const publicDir = path.join(rootDir, 'public')
 const source = 'heraldic_shield_black_white copy.svg'
 
 // Tunable classification bounds for splitting black pixels into mask layers.
-const OUTLINE_INSET = 45
-const LION = { minX: 280, maxX: 980, minY: 100, maxY: 520 }
-const CENTRAL_SWORD = { minX: 590, maxX: 670, minY: 380, maxY: 920 }
 const HELD_SWORD = { minX: 660, maxX: 780, minY: 160, maxY: 420 }
+const CENTRAL_SWORD = { minX: 590, maxX: 670, minY: 380, maxY: 920 }
+const LION = { minX: 280, maxX: 980, minY: 100, maxY: 520 }
 
 const rectRe =
   /<rect x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)" fill="rgb\((\d+),(\d+),(\d+)\)"\/>/g
@@ -54,21 +53,14 @@ const inBounds = (p, bounds) =>
   p.y >= bounds.minY &&
   p.y <= bounds.maxY
 
-const isOutline = (p) =>
-  p.x <= shieldMinX + OUTLINE_INSET || p.x >= shieldMaxX - OUTLINE_INSET
+const isCentralSword = (p) => inBounds(p, CENTRAL_SWORD)
 
-const isCentralSword = (p) => !isOutline(p) && inBounds(p, CENTRAL_SWORD)
-
-const isHeldSword = (p) => !isOutline(p) && inBounds(p, HELD_SWORD)
-
-const isLion = (p) =>
-  !isOutline(p) && !isCentralSword(p) && !isHeldSword(p) && inBounds(p, LION)
+const isLionGroup = (p) =>
+  inBounds(p, LION) || inBounds(p, HELD_SWORD)
 
 const classifyBlack = (p) => {
-  if (isOutline(p)) return 'outline'
-  if (isCentralSword(p)) return 'sword'
-  if (isHeldSword(p)) return 'sword'
-  if (isLion(p)) return 'lion'
+  if (isCentralSword(p)) return 'centralSword'
+  if (isLionGroup(p)) return 'lion'
   return 'charges'
 }
 
@@ -85,30 +77,45 @@ const writeMask = (filename, layerRects) => {
 }
 
 const fieldRects = rects.filter((rect) => isWhite(rect) && isInsideShield(rect))
-const outlineRects = []
-const lionRects = []
-const swordRects = []
 const chargesRects = []
+const lionRects = []
+const centralSwordRects = []
 
 for (const rect of blackRects) {
   const layer = classifyBlack(rect)
-  if (layer === 'outline') outlineRects.push(rect)
+  if (layer === 'centralSword') centralSwordRects.push(rect)
   else if (layer === 'lion') lionRects.push(rect)
-  else if (layer === 'sword') swordRects.push(rect)
   else chargesRects.push(rect)
 }
 
 const outputs = [
   ['heraldic-shield-field.svg', fieldRects],
-  ['heraldic-shield-outline.svg', outlineRects],
+  ['heraldic-shield-charges.svg', chargesRects],
   ['heraldic-lion.svg', lionRects],
-  ['heraldic-sword.svg', swordRects],
-  ['heraldic-charges.svg', chargesRects],
+  ['heraldic-central-sword.svg', centralSwordRects],
+  ['heraldic-shield.svg', blackRects],
 ]
 
 for (const [filename, layerRects] of outputs) {
   const count = writeMask(filename, layerRects)
   console.log(`Processed ${filename}: ${count} pixels`)
+}
+
+const obsolete = [
+  'heraldic-shield-rest.svg',
+  'heraldic-shield-figures.svg',
+  'heraldic-held-blade.svg',
+  'heraldic-shield-outline.svg',
+  'heraldic-sword.svg',
+  'heraldic-charges.svg',
+]
+
+for (const filename of obsolete) {
+  const filePath = path.join(publicDir, filename)
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath)
+    console.log(`Removed ${filename}`)
+  }
 }
 
 console.log(

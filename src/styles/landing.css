@@ -3,6 +3,7 @@
   --color-gold: #FED335;
   --color-azure: #0342A8;
   --color-gules: #C41E3A;
+  --color-argent: #B5B5B5;
   --color-white: #ffffff;
   --color-black: #000000;
   --ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
@@ -74,44 +75,30 @@
 
 .heraldic-logo {
   position: relative;
-  width: clamp(108px, min(16.8vw, 19.4vmin), 292px);
+  width: clamp(105px, min(16.4vw, 18.9vmin), 284px);
   aspect-ratio: 1;
   margin-top: clamp(20px, 3.9vmin, 67px);
   cursor: default;
 }
 
 .heraldic-logo__field,
-.heraldic-logo__outline,
+.heraldic-logo__charges,
 .heraldic-logo__lion,
-.heraldic-logo__sword,
-.heraldic-logo__charges {
+.heraldic-logo__central-sword {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
   mask-mode: alpha;
+  -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
   transition:
     background-color 0.4s var(--ease-standard),
-    opacity 0.4s var(--ease-standard),
-    mask-size 0.4s var(--ease-standard),
-    -webkit-mask-size 0.4s var(--ease-standard);
-}
-
-.heraldic-logo__field,
-.heraldic-logo__outline {
-  mask-size: 114%;
-  -webkit-mask-size: 114%;
-}
-
-.heraldic-logo__lion,
-.heraldic-logo__sword,
-.heraldic-logo__charges {
-  mask-size: 106%;
-  -webkit-mask-size: 106%;
+    opacity 0.4s var(--ease-standard);
 }
 
 .heraldic-logo__field {
@@ -121,10 +108,10 @@
   opacity: 0;
 }
 
-.heraldic-logo__outline {
+.heraldic-logo__charges {
   background-color: var(--color-tan);
-  mask-image: url('/heraldic-shield-outline.svg');
-  -webkit-mask-image: url('/heraldic-shield-outline.svg');
+  mask-image: url('/heraldic-shield-charges.svg');
+  -webkit-mask-image: url('/heraldic-shield-charges.svg');
 }
 
 .heraldic-logo__lion {
@@ -133,28 +120,37 @@
   -webkit-mask-image: url('/heraldic-lion.svg');
 }
 
-.heraldic-logo__sword {
+.heraldic-logo__central-sword {
   background-color: var(--color-tan);
-  mask-image: url('/heraldic-sword.svg');
-  -webkit-mask-image: url('/heraldic-sword.svg');
+  mask-image: url('/heraldic-central-sword.svg');
+  -webkit-mask-image: url('/heraldic-central-sword.svg');
 }
 
-.heraldic-logo__charges {
-  background-color: var(--color-tan);
-  mask-image: url('/heraldic-charges.svg');
-  -webkit-mask-image: url('/heraldic-charges.svg');
+.heraldic-logo__lion-hit {
+  position: absolute;
+  top: 8%;
+  left: 22.3%;
+  width: 55.8%;
+  height: 33.5%;
+  z-index: 1;
+  cursor: default;
 }
 
 .heraldic-logo--active .heraldic-logo__field {
   opacity: 1;
 }
 
+.heraldic-logo--active .heraldic-logo__charges,
 .heraldic-logo--active .heraldic-logo__lion {
-  background-color: var(--color-gules);
+  background-color: var(--color-gold);
 }
 
-.heraldic-logo--active .heraldic-logo__sword {
-  background-color: var(--color-gold);
+.heraldic-logo--active .heraldic-logo__central-sword {
+  background-color: var(--color-argent);
+}
+
+.heraldic-logo--lion-active .heraldic-logo__lion {
+  background-color: var(--color-gules);
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
@@ -163,7 +159,7 @@
   }
 
   .heraldic-logo {
-    width: clamp(78px, 21.6vh, 173px);
+    width: clamp(76px, 21vh, 168px);
     margin-top: 0.75rem;
   }
 }
@@ -172,10 +168,9 @@
   .landing-page__overlay,
   .wordmark__letter-g,
   .heraldic-logo__field,
-  .heraldic-logo__outline,
+  .heraldic-logo__charges,
   .heraldic-logo__lion,
-  .heraldic-logo__sword,
-  .heraldic-logo__charges {
+  .heraldic-logo__central-sword {
     transition-duration: 0.01ms;
   }
 }

@@ -15,6 +15,26 @@
   background-color: var(--color-white);
 }
 
+.landing-page__video {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s var(--ease-luxury);
+}
+
+.landing-page__video--active {
+  opacity: 1;
+}
+
+.landing-page__video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
 .landing-page__overlay {
   position: fixed;
   inset: 0;
@@ -95,8 +115,14 @@
   text-align: center;
   opacity: 0;
   animation: landing-wordmark-enter 1.2s var(--ease-luxury) forwards;
+  transition: color 0.9s var(--ease-luxury);
 }
 
+.wordmark--shizzy-active .wordmark__shizzy {
+  color: var(--color-white);
+}
+
+.wordmark__shizzy,
 .wordmark__letter-g {
   cursor: default;
   color: inherit;
@@ -109,8 +135,9 @@
 
 .heraldic-logo {
   position: relative;
-  width: clamp(105px, min(16.4vw, 18.9vmin), 284px);
-  aspect-ratio: 1;
+  width: auto;
+  height: clamp(105px, min(16.4vw, 18.9vmin), 284px);
+  aspect-ratio: 2040 / 1500;
   margin-top: clamp(20px, 3.9vmin, 67px);
   cursor: default;
   opacity: 0;
@@ -121,7 +148,8 @@
 .heraldic-logo__field,
 .heraldic-logo__charges,
 .heraldic-logo__lion,
-.heraldic-logo__central-sword {
+.heraldic-logo__central-sword,
+.heraldic-logo__side-lions {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -163,12 +191,19 @@
   -webkit-mask-image: url('/heraldic-central-sword.svg');
 }
 
+.heraldic-logo__side-lions {
+  background-color: var(--color-white);
+  mask-image: url('/heraldic-side-lions.svg');
+  -webkit-mask-image: url('/heraldic-side-lions.svg');
+  opacity: 0;
+}
+
 .heraldic-logo__lion-hit {
   position: absolute;
-  top: 11%;
-  left: 34.5%;
-  width: 31.3%;
-  height: 24.1%;
+  top: 17.2%;
+  left: 40.5%;
+  width: 19.3%;
+  height: 20.1%;
   z-index: 1;
   cursor: default;
 }
@@ -190,24 +225,39 @@
   background-color: var(--color-gules);
 }
 
+.heraldic-logo--shizzy-active .heraldic-logo__charges,
+.heraldic-logo--shizzy-active .heraldic-logo__lion,
+.heraldic-logo--shizzy-active .heraldic-logo__central-sword {
+  background-color: var(--color-white);
+}
+
+.heraldic-logo--shizzy-active .heraldic-logo__side-lions {
+  opacity: 1;
+}
+
 @media (orientation: landscape) and (max-height: 500px) {
   .wordmark {
     font-size: clamp(1.5rem, 14vh, 5rem);
   }
 
   .heraldic-logo {
-    width: clamp(76px, 21vh, 168px);
+    width: auto;
+    height: clamp(76px, 21vh, 168px);
     margin-top: 0.75rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .landing-page__overlay,
+  .landing-page__video,
+  .wordmark,
+  .wordmark__shizzy,
   .wordmark__letter-g,
   .heraldic-logo__field,
   .heraldic-logo__charges,
   .heraldic-logo__lion,
-  .heraldic-logo__central-sword {
+  .heraldic-logo__central-sword,
+  .heraldic-logo__side-lions {
     transition-duration: 0.01ms;
   }
 

@@ -2,15 +2,21 @@ import { useState } from 'react'
 
 type HeraldicLogoProps = {
   gHovered: boolean
+  shizzyHovered: boolean
   onLogoHoverChange: (hovered: boolean) => void
 }
 
-export function HeraldicLogo({ gHovered, onLogoHoverChange }: HeraldicLogoProps) {
+export function HeraldicLogo({
+  gHovered,
+  shizzyHovered,
+  onLogoHoverChange,
+}: HeraldicLogoProps) {
   const [lionHovered, setLionHovered] = useState(false)
 
   const className = [
     'heraldic-logo',
     gHovered && 'heraldic-logo--active',
+    shizzyHovered && 'heraldic-logo--shizzy-active',
     lionHovered && !gHovered && 'heraldic-logo--lion-active',
   ]
     .filter(Boolean)
@@ -31,6 +37,7 @@ export function HeraldicLogo({ gHovered, onLogoHoverChange }: HeraldicLogoProps)
       <div className="heraldic-logo__charges" />
       <div className="heraldic-logo__central-sword" />
       <div className="heraldic-logo__lion" />
+      <div className="heraldic-logo__side-lions" />
       <div
         className="heraldic-logo__lion-hit"
         aria-hidden="true"

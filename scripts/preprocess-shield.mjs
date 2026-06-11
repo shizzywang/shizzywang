@@ -6,8 +6,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.join(__dirname, '..')
 const publicDir = path.join(rootDir, 'public')
 
-const crestSource = 'shizzywang_crest.svg'
+const crestSource = 'shizzywang_crest_side_lions_more_gap_wide_viewport.svg'
 const fieldSource = 'heraldic_shield_black_white copy.svg'
+
+const VIEWPORT_W = 2040
+const VIEWPORT_H = 1500
+const CREST_OFFSET_X = 273
+const CREST_OFFSET_Y = 120
 
 const LION_GROUPS = new Set([
   'lion_body_main',
@@ -31,8 +36,9 @@ const CHARGE_GROUPS = new Set([
   'garb_bottom',
 ])
 
-const MASK_HEADER =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1254" height="1254" viewBox="0 0 1254 1254" shape-rendering="crispEdges">'
+const SIDE_LION_GROUPS = ['lion_rampant_left', 'lion_rampant_right']
+
+const MASK_HEADER = `<svg xmlns="http://www.w3.org/2000/svg" width="${VIEWPORT_W}" height="${VIEWPORT_H}" viewBox="0 0 ${VIEWPORT_W} ${VIEWPORT_H}" shape-rendering="crispEdges">`
 
 const rectTagRe = /<rect\b[^>]*\/?>/gi
 const attrRe = (name) => new RegExp(`\\b${name}="([^"]+)"`)
@@ -50,6 +56,13 @@ const parseRectTag = (tag) => {
     h: read('height'),
   }
 }
+
+const offsetRects = (rects, dx, dy) =>
+  rects.map((rect) => ({
+    ...rect,
+    x: rect.x + dx,
+    y: rect.y + dy,
+  }))
 
 const toMaskRect = (rect) =>
   `<rect x="${rect.x}" y="${rect.y}" width="${rect.w}" height="${rect.h}" fill="rgb(0,0,0)"/>`
@@ -118,9 +131,22 @@ const writeMask = (filename, rects, toTag = toMaskRect) => {
 const crestPath = path.join(rootDir, crestSource)
 const crestSvg = fs.readFileSync(crestPath, 'utf8')
 
-const lionRects = collectRectsFromGroups(crestSvg, [...LION_GROUPS])
-const centralSwordRects = collectRectsFromGroups(crestSvg, [...CENTRAL_SWORD_GROUPS])
-const chargesRects = collectRectsFromGroups(crestSvg, [...CHARGE_GROUPS])
+const lionRects = offsetRects(
+  collectRectsFromGroups(crestSvg, [...LION_GROUPS]),
+  CREST_OFFSET_X,
+  CREST_OFFSET_Y,
+)
+const centralSwordRects = offsetRects(
+  collectRectsFromGroups(crestSvg, [...CENTRAL_SWORD_GROUPS]),
+  CREST_OFFSET_X,
+  CREST_OFFSET_Y,
+)
+const chargesRects = offsetRects(
+  collectRectsFromGroups(crestSvg, [...CHARGE_GROUPS]),
+  CREST_OFFSET_X,
+  CREST_OFFSET_Y,
+)
+const sideLionRects = collectRectsFromGroups(crestSvg, SIDE_LION_GROUPS)
 const allChargeRects = [...chargesRects, ...lionRects, ...centralSwordRects]
 
 const fieldInputPath = path.join(rootDir, fieldSource)
@@ -156,8 +182,10 @@ const isInsideShield = (rect) =>
   rect.y >= shieldMinY &&
   rect.y + rect.h <= shieldMaxY
 
-const fieldRects = legacyRects.filter(
-  (rect) => isWhite(rect) && isInsideShield(rect),
+const fieldRects = offsetRects(
+  legacyRects.filter((rect) => isWhite(rect) && isInsideShield(rect)),
+  CREST_OFFSET_X,
+  CREST_OFFSET_Y,
 )
 
 const outputs = [
@@ -166,6 +194,7 @@ const outputs = [
   ['heraldic-lion.svg', lionRects, toMaskRect],
   ['heraldic-central-sword.svg', centralSwordRects, toMaskRect],
   ['heraldic-shield.svg', allChargeRects, toMaskRect],
+  ['heraldic-side-lions.svg', sideLionRects, toMaskRect],
 ]
 
 for (const [filename, rects, toTag] of outputs) {
@@ -195,12 +224,11 @@ const faviconSvg = faviconHeader + lionRects.map(toTanRect).join('') + '</svg>'
 fs.writeFileSync(path.join(publicDir, 'favicon.svg'), faviconSvg)
 console.log(`Processed favicon.svg: ${lionRects.length} pixels`)
 
-const canvas = 1254
 const lionHit = {
-  top: ((lionHitBounds.minY / canvas) * 100).toFixed(1),
-  left: ((lionHitBounds.minX / canvas) * 100).toFixed(1),
-  width: (((lionHitBounds.maxX - lionHitBounds.minX) / canvas) * 100).toFixed(1),
-  height: (((lionHitBounds.maxY - lionHitBounds.minY) / canvas) * 100).toFixed(1),
+  top: ((lionHitBounds.minY / VIEWPORT_H) * 100).toFixed(1),
+  left: ((lionHitBounds.minX / VIEWPORT_W) * 100).toFixed(1),
+  width: (((lionHitBounds.maxX - lionHitBounds.minX) / VIEWPORT_W) * 100).toFixed(1),
+  height: (((lionHitBounds.maxY - lionHitBounds.minY) / VIEWPORT_H) * 100).toFixed(1),
 }
 
 console.log(

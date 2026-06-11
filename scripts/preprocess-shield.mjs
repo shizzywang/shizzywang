@@ -57,6 +57,10 @@ const toMaskRect = (rect) =>
 const toWhiteMaskRect = (rect) =>
   `<rect x="${rect.x}" y="${rect.y}" width="${rect.w}" height="${rect.h}" fill="rgb(255,255,255)"/>`
 
+const TAN = '#d2b795'
+const toTanRect = (rect) =>
+  `<rect x="${rect.x}" y="${rect.y}" width="${rect.w}" height="${rect.h}" fill="${TAN}"/>`
+
 const extractGroupById = (svg, groupId) => {
   const idPattern = new RegExp(`<g\\b[^>]*\\bid="${groupId}"[^>]*>`, 'i')
   const match = idPattern.exec(svg)
@@ -178,6 +182,18 @@ const lionHitBounds = lionRects.reduce(
   }),
   { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity },
 )
+
+const faviconPadding = 12
+const faviconViewBox = [
+  lionHitBounds.minX - faviconPadding,
+  lionHitBounds.minY - faviconPadding,
+  lionHitBounds.maxX - lionHitBounds.minX + faviconPadding * 2,
+  lionHitBounds.maxY - lionHitBounds.minY + faviconPadding * 2,
+].join(' ')
+const faviconHeader = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="${faviconViewBox}" shape-rendering="crispEdges">`
+const faviconSvg = faviconHeader + lionRects.map(toTanRect).join('') + '</svg>'
+fs.writeFileSync(path.join(publicDir, 'favicon.svg'), faviconSvg)
+console.log(`Processed favicon.svg: ${lionRects.length} pixels`)
 
 const canvas = 1254
 const lionHit = {

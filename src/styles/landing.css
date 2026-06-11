@@ -59,6 +59,32 @@
   overflow: clip;
 }
 
+@keyframes landing-wordmark-enter {
+  from {
+    opacity: 0;
+    transform: translateY(1.1rem);
+    filter: blur(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes landing-crest-enter {
+  from {
+    opacity: 0;
+    transform: translateY(1.35rem) scale(0.93);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .wordmark {
   font-family: 'Jacquard 24', system-ui, serif;
   font-size: clamp(1.75rem, min(11.6vw, 14vmin), 12.5rem);
@@ -67,6 +93,8 @@
   color: var(--color-tan);
   white-space: nowrap;
   text-align: center;
+  opacity: 0;
+  animation: landing-wordmark-enter 1.2s var(--ease-luxury) forwards;
 }
 
 .wordmark__letter-g {
@@ -85,6 +113,9 @@
   aspect-ratio: 1;
   margin-top: clamp(20px, 3.9vmin, 67px);
   cursor: default;
+  opacity: 0;
+  transform-origin: center center;
+  animation: landing-crest-enter 1.3s var(--ease-luxury) 0.45s forwards;
 }
 
 .heraldic-logo__field,
@@ -178,5 +209,13 @@
   .heraldic-logo__lion,
   .heraldic-logo__central-sword {
     transition-duration: 0.01ms;
+  }
+
+  .wordmark,
+  .heraldic-logo {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
 }

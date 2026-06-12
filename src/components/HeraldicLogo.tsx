@@ -35,6 +35,7 @@ export function HeraldicLogo({
     >
       <div className="heraldic-logo__field" />
       <div className="heraldic-logo__charges" />
+      <div className="heraldic-logo__leaves" />
       <div className="heraldic-logo__central-sword" />
       <div className="heraldic-logo__lion" />
       <div className="heraldic-logo__side-lions" />

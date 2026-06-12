@@ -13,6 +13,8 @@ const VIEWPORT_W = 2040
 const VIEWPORT_H = 1500
 const CREST_OFFSET_X = 273
 const CREST_OFFSET_Y = 120
+// heraldic_shield_black_white copy.svg is 120px left of crest groups in the nested 1254 viewBox
+const FIELD_SOURCE_DX = 120
 
 const LION_GROUPS = new Set([
   'lion_body_main',
@@ -27,13 +29,16 @@ const CENTRAL_SWORD_GROUPS = new Set(['center_sword'])
 const CHARGE_GROUPS = new Set([
   'shield_outer_border',
   'shield_inner_border',
+  'garb_left',
+  'garb_right',
+  'garb_bottom',
+])
+
+const LEAF_GROUPS = new Set([
   'leaf_top_left',
   'leaf_top_right',
   'leaf_mid_left',
   'leaf_mid_right',
-  'garb_left',
-  'garb_right',
-  'garb_bottom',
 ])
 
 const SIDE_LION_GROUPS = ['lion_rampant_left', 'lion_rampant_right']
@@ -146,8 +151,13 @@ const chargesRects = offsetRects(
   CREST_OFFSET_X,
   CREST_OFFSET_Y,
 )
+const leafRects = offsetRects(
+  collectRectsFromGroups(crestSvg, [...LEAF_GROUPS]),
+  CREST_OFFSET_X,
+  CREST_OFFSET_Y,
+)
 const sideLionRects = collectRectsFromGroups(crestSvg, SIDE_LION_GROUPS)
-const allChargeRects = [...chargesRects, ...lionRects, ...centralSwordRects]
+const allChargeRects = [...chargesRects, ...leafRects, ...lionRects, ...centralSwordRects]
 
 const fieldInputPath = path.join(rootDir, fieldSource)
 const fieldOriginal = fs.readFileSync(fieldInputPath, 'utf8')
@@ -184,13 +194,14 @@ const isInsideShield = (rect) =>
 
 const fieldRects = offsetRects(
   legacyRects.filter((rect) => isWhite(rect) && isInsideShield(rect)),
-  CREST_OFFSET_X,
+  CREST_OFFSET_X + FIELD_SOURCE_DX,
   CREST_OFFSET_Y,
 )
 
 const outputs = [
   ['heraldic-shield-field.svg', fieldRects, toWhiteMaskRect],
   ['heraldic-shield-charges.svg', chargesRects, toMaskRect],
+  ['heraldic-leaves.svg', leafRects, toMaskRect],
   ['heraldic-lion.svg', lionRects, toMaskRect],
   ['heraldic-central-sword.svg', centralSwordRects, toMaskRect],
   ['heraldic-shield.svg', allChargeRects, toMaskRect],

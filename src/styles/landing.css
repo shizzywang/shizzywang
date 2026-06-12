@@ -8,6 +8,8 @@
   --color-black: #000000;
   --ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --video-fade-in: 0.9s;
+  --video-fade-out: 0.2s;
 
   position: relative;
   min-height: 100dvh;
@@ -19,20 +21,50 @@
   position: fixed;
   inset: 0;
   z-index: 0;
-  opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.9s var(--ease-luxury);
+  overflow: hidden;
 }
 
-.landing-page__video--active {
-  opacity: 1;
+.landing-page__video--mounted {
+  visibility: visible;
 }
 
 .landing-page__video video {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: 100dvw;
+  height: 100dvh;
+  max-width: none;
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.05);
   object-fit: cover;
   object-position: center;
+}
+
+.landing-page__video__scrim {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  bottom: -4px;
+  left: -4px;
+  z-index: 1;
+  background-color: var(--color-white);
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity var(--video-fade-in) var(--ease-luxury);
+}
+
+.landing-page__video--active .landing-page__video__scrim {
+  opacity: 0;
+}
+
+.landing-page__video--exiting .landing-page__video__scrim {
+  transition: opacity var(--video-fade-out) var(--ease-standard);
+  opacity: 1;
 }
 
 .landing-page__overlay {
@@ -147,6 +179,7 @@
 
 .heraldic-logo__field,
 .heraldic-logo__charges,
+.heraldic-logo__leaves,
 .heraldic-logo__lion,
 .heraldic-logo__central-sword,
 .heraldic-logo__side-lions {
@@ -177,6 +210,12 @@
   background-color: var(--color-tan);
   mask-image: url('/heraldic-shield-charges.svg');
   -webkit-mask-image: url('/heraldic-shield-charges.svg');
+}
+
+.heraldic-logo__leaves {
+  background-color: var(--color-tan);
+  mask-image: url('/heraldic-leaves.svg');
+  -webkit-mask-image: url('/heraldic-leaves.svg');
 }
 
 .heraldic-logo__lion {
@@ -213,6 +252,7 @@
 }
 
 .heraldic-logo--active .heraldic-logo__charges,
+.heraldic-logo--active .heraldic-logo__leaves,
 .heraldic-logo--active .heraldic-logo__lion {
   background-color: var(--color-gold);
 }
@@ -225,7 +265,12 @@
   background-color: var(--color-gules);
 }
 
+.heraldic-logo--lion-active .heraldic-logo__leaves {
+  background-color: var(--color-gold);
+}
+
 .heraldic-logo--shizzy-active .heraldic-logo__charges,
+.heraldic-logo--shizzy-active .heraldic-logo__leaves,
 .heraldic-logo--shizzy-active .heraldic-logo__lion,
 .heraldic-logo--shizzy-active .heraldic-logo__central-sword {
   background-color: var(--color-white);
@@ -249,12 +294,13 @@
 
 @media (prefers-reduced-motion: reduce) {
   .landing-page__overlay,
-  .landing-page__video,
+  .landing-page__video__scrim,
   .wordmark,
   .wordmark__shizzy,
   .wordmark__letter-g,
   .heraldic-logo__field,
   .heraldic-logo__charges,
+  .heraldic-logo__leaves,
   .heraldic-logo__lion,
   .heraldic-logo__central-sword,
   .heraldic-logo__side-lions {

@@ -3,12 +3,14 @@ import { useState } from 'react'
 type HeraldicLogoProps = {
   gHovered: boolean
   shizzyHovered: boolean
+  stackHovered: boolean
   onLogoHoverChange: (hovered: boolean) => void
 }
 
 export function HeraldicLogo({
   gHovered,
   shizzyHovered,
+  stackHovered,
   onLogoHoverChange,
 }: HeraldicLogoProps) {
   const [lionHovered, setLionHovered] = useState(false)
@@ -17,6 +19,7 @@ export function HeraldicLogo({
     'heraldic-logo',
     gHovered && 'heraldic-logo--active',
     shizzyHovered && 'heraldic-logo--shizzy-active',
+    stackHovered && 'heraldic-logo--stack-active',
     lionHovered && !gHovered && 'heraldic-logo--lion-active',
   ]
     .filter(Boolean)

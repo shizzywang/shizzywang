@@ -1,6 +1,7 @@
 type WordmarkProps = {
   gHovered: boolean
   shizzyHovered: boolean
+  stackHovered: boolean
   onGHoverChange: (hovered: boolean) => void
   onShizzyHoverChange: (hovered: boolean) => void
 }
@@ -8,11 +9,20 @@ type WordmarkProps = {
 export function Wordmark({
   gHovered,
   shizzyHovered,
+  stackHovered,
   onGHoverChange,
   onShizzyHoverChange,
 }: WordmarkProps) {
   return (
-    <h1 className={`wordmark${shizzyHovered ? ' wordmark--shizzy-active' : ''}`}>
+    <h1
+      className={[
+        'wordmark',
+        shizzyHovered && 'wordmark--shizzy-active',
+        stackHovered && 'wordmark--stack-active',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <span
         className="wordmark__shizzy"
         onPointerEnter={() => onShizzyHoverChange(true)}

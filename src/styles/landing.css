@@ -30,6 +30,10 @@
   visibility: visible;
 }
 
+.landing-page__video--stack {
+  z-index: 1;
+}
+
 .landing-page__video video {
   position: absolute;
   top: 50%;
@@ -147,7 +151,16 @@
   text-align: center;
   opacity: 0;
   animation: landing-wordmark-enter 1.2s var(--ease-luxury) forwards;
-  transition: color 0.9s var(--ease-luxury);
+  transition:
+    color 0.9s var(--ease-luxury),
+    opacity 0.9s var(--ease-luxury),
+    visibility 0.9s var(--ease-luxury);
+}
+
+.wordmark--stack-active {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .wordmark--shizzy-active .wordmark__shizzy {
@@ -272,12 +285,28 @@
 .heraldic-logo--shizzy-active .heraldic-logo__charges,
 .heraldic-logo--shizzy-active .heraldic-logo__leaves,
 .heraldic-logo--shizzy-active .heraldic-logo__lion,
-.heraldic-logo--shizzy-active .heraldic-logo__central-sword {
+.heraldic-logo--shizzy-active .heraldic-logo__central-sword,
+.heraldic-logo--stack-active .heraldic-logo__charges,
+.heraldic-logo--stack-active .heraldic-logo__leaves,
+.heraldic-logo--stack-active .heraldic-logo__lion,
+.heraldic-logo--stack-active .heraldic-logo__central-sword {
   background-color: var(--color-white);
 }
 
-.heraldic-logo--shizzy-active .heraldic-logo__side-lions {
+.heraldic-logo--shizzy-active .heraldic-logo__side-lions,
+.heraldic-logo--stack-active .heraldic-logo__side-lions {
   opacity: 1;
+}
+
+.stack-logo {
+  display: block;
+  height: clamp(72px, 10vmin, 140px);
+  width: auto;
+  margin-top: clamp(48px, 7vmin, 96px);
+  cursor: default;
+  opacity: 0;
+  transform-origin: center center;
+  animation: landing-crest-enter 1.3s var(--ease-luxury) 0.75s forwards;
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
@@ -289,6 +318,11 @@
     width: auto;
     height: clamp(76px, 21vh, 168px);
     margin-top: 0.75rem;
+  }
+
+  .stack-logo {
+    height: clamp(48px, 14vh, 96px);
+    margin-top: clamp(24px, 4vh, 48px);
   }
 }
 
@@ -308,7 +342,8 @@
   }
 
   .wordmark,
-  .heraldic-logo {
+  .heraldic-logo,
+  .stack-logo {
     animation: none;
     opacity: 1;
     transform: none;

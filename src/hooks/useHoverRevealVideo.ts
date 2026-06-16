@@ -8,10 +8,11 @@ function revealAfterFirstFrame(video: HTMLVideoElement, onReveal: () => void) {
   }
 }
 
-export function useHoverRevealVideo(active: boolean) {
-  const [videoMounted, setVideoMounted] = useState(false)
+export function useHoverRevealVideo(active: boolean, isWarm: boolean) {
   const [videoRevealed, setVideoRevealed] = useState(false)
   const [videoExiting, setVideoExiting] = useState(false)
+  const [videoFallbackVisible, setVideoFallbackVisible] = useState(false)
+  const [videoWarmReveal, setVideoWarmReveal] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const videoRevealedRef = useRef(false)
 
@@ -24,16 +25,21 @@ export function useHoverRevealVideo(active: boolean) {
 
     videoRevealedRef.current = false
     setVideoExiting(false)
-    setVideoMounted(true)
+    setVideoWarmReveal(isWarm)
+    setVideoFallbackVisible(!isWarm)
 
     const reveal = () => {
       if (!cancelled) {
         videoRevealedRef.current = true
         setVideoRevealed(true)
+        setVideoFallbackVisible(false)
       }
     }
 
     const onPlaying = () => {
+      if (!cancelled) {
+        setVideoFallbackVisible(false)
+      }
       if (reducedMotion) {
         reveal()
         return
@@ -41,18 +47,32 @@ export function useHoverRevealVideo(active: boolean) {
       revealAfterFirstFrame(video, reveal)
     }
 
+    const onPlaybackFailure = () => {
+      if (!cancelled) {
+        setVideoFallbackVisible(true)
+        // Ensure we don't keep the luxury scrim around during failures.
+        setVideoRevealed(false)
+        videoRevealedRef.current = false
+      }
+    }
+
     if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-      void video.play().then(onPlaying).catch(() => {})
+      void video.play().then(onPlaying).catch(onPlaybackFailure)
     } else {
       video.addEventListener('playing', onPlaying, { once: true })
-      void video.play().catch(() => {})
+      void video.play().catch(onPlaybackFailure)
     }
+
+    video.addEventListener('error', onPlaybackFailure)
+    video.addEventListener('stalled', onPlaybackFailure)
 
     return () => {
       cancelled = true
       video.removeEventListener('playing', onPlaying)
+      video.removeEventListener('error', onPlaybackFailure)
+      video.removeEventListener('stalled', onPlaybackFailure)
     }
-  }, [active])
+  }, [active, isWarm])
 
   useEffect(() => {
     if (active) return
@@ -61,7 +81,8 @@ export function useHoverRevealVideo(active: boolean) {
 
     if (!videoRevealedRef.current) {
       setVideoExiting(false)
-      setVideoMounted(false)
+      setVideoFallbackVisible(false)
+      setVideoWarmReveal(false)
       return
     }
 
@@ -75,14 +96,16 @@ export function useHoverRevealVideo(active: boolean) {
     if (event.propertyName !== 'opacity' || active || videoRevealed) return
     videoRevealedRef.current = false
     setVideoExiting(false)
-    setVideoMounted(false)
+    setVideoFallbackVisible(false)
+    setVideoWarmReveal(false)
   }
 
   return {
     videoRef,
-    videoMounted,
     videoRevealed,
     videoExiting,
+    videoFallbackVisible,
+    videoWarmReveal,
     handleScrimTransitionEnd,
   }
 }

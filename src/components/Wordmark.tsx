@@ -4,6 +4,7 @@ type WordmarkProps = {
   stackHovered: boolean
   onGHoverChange: (hovered: boolean) => void
   onShizzyHoverChange: (hovered: boolean) => void
+  onShizzyHoverIntent?: () => void
 }
 
 export function Wordmark({
@@ -12,6 +13,7 @@ export function Wordmark({
   stackHovered,
   onGHoverChange,
   onShizzyHoverChange,
+  onShizzyHoverIntent,
 }: WordmarkProps) {
   return (
     <h1
@@ -25,7 +27,10 @@ export function Wordmark({
     >
       <span
         className="wordmark__shizzy"
-        onPointerEnter={() => onShizzyHoverChange(true)}
+        onPointerEnter={() => {
+          onShizzyHoverIntent?.()
+          onShizzyHoverChange(true)
+        }}
         onPointerLeave={() => onShizzyHoverChange(false)}
       >
         shizzy

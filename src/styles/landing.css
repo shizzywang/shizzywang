@@ -9,6 +9,7 @@
   --ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --video-fade-in: 0.9s;
+  --video-fade-in-warm: 0.45s;
   --video-fade-out: 0.2s;
 
   position: relative;
@@ -21,13 +22,14 @@
   position: fixed;
   inset: 0;
   z-index: 0;
-  visibility: hidden;
+  opacity: 0;
   pointer-events: none;
   overflow: hidden;
+  transition: opacity var(--video-fade-out) var(--ease-standard);
 }
 
 .landing-page__video--mounted {
-  visibility: visible;
+  opacity: 1;
 }
 
 .landing-page__video--stack {
@@ -66,9 +68,18 @@
   opacity: 0;
 }
 
+.landing-page__video--warm .landing-page__video__scrim {
+  transition: opacity var(--video-fade-in-warm) var(--ease-luxury);
+}
+
 .landing-page__video--exiting .landing-page__video__scrim {
   transition: opacity var(--video-fade-out) var(--ease-standard);
   opacity: 1;
+}
+
+.landing-page__video--fallback .landing-page__video__scrim {
+  opacity: 0;
+  transition: none;
 }
 
 .landing-page__overlay {
@@ -161,6 +172,10 @@
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  transition:
+    color 0.9s var(--ease-luxury),
+    opacity var(--video-fade-out) var(--ease-standard),
+    visibility var(--video-fade-out) var(--ease-standard);
 }
 
 .wordmark--shizzy-active .wordmark__shizzy {
@@ -179,15 +194,23 @@
 }
 
 .heraldic-logo {
+  --crest-height: clamp(105px, min(16.4vw, 18.9vmin), 284px);
   position: relative;
   width: auto;
-  height: clamp(105px, min(16.4vw, 18.9vmin), 284px);
+  height: round(var(--crest-height), 25px);
   aspect-ratio: 2040 / 1500;
   margin-top: clamp(20px, 3.9vmin, 67px);
   cursor: default;
+  pointer-events: none;
   opacity: 0;
   transform-origin: center center;
   animation: landing-crest-enter 1.3s var(--ease-luxury) 0.45s forwards;
+}
+
+@supports not (height: round(1px, 1px)) {
+  .heraldic-logo {
+    height: clamp(125px, min(16.4vw, 18.9vmin), 275px);
+  }
 }
 
 .heraldic-logo__field,
@@ -207,6 +230,8 @@
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
   transition:
     background-color 0.4s var(--ease-standard),
     opacity 0.4s var(--ease-standard);
@@ -250,6 +275,16 @@
   opacity: 0;
 }
 
+.heraldic-logo__hit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  cursor: default;
+  clip-path: url('/heraldic-crest-hit.svg#crestClip');
+}
+
 .heraldic-logo__lion-hit {
   position: absolute;
   top: 17.2%;
@@ -257,6 +292,7 @@
   width: 19.3%;
   height: 20.1%;
   z-index: 1;
+  pointer-events: auto;
   cursor: default;
 }
 
@@ -309,15 +345,33 @@
   animation: landing-crest-enter 1.3s var(--ease-luxury) 0.75s forwards;
 }
 
+.stack-logo__svg {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
+.stack-logo__icon {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 @media (orientation: landscape) and (max-height: 500px) {
   .wordmark {
     font-size: clamp(1.5rem, 14vh, 5rem);
   }
 
   .heraldic-logo {
+    --crest-height: clamp(76px, 21vh, 168px);
     width: auto;
-    height: clamp(76px, 21vh, 168px);
+    height: round(var(--crest-height), 25px);
     margin-top: 0.75rem;
+  }
+
+  @supports not (height: round(1px, 1px)) {
+    .heraldic-logo {
+      height: clamp(100px, 21vh, 150px);
+    }
   }
 
   .stack-logo {

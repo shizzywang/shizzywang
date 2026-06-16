@@ -26,22 +26,22 @@ export function HeraldicLogo({
     .join(' ')
 
   return (
-    <div
-      className={className}
-      onPointerEnter={() => onLogoHoverChange(true)}
-      onPointerLeave={() => {
-        onLogoHoverChange(false)
-        setLionHovered(false)
-      }}
-      role="img"
-      aria-label="Shizzywang heraldic shield"
-    >
+    <div className={className} role="img" aria-label="Shizzywang heraldic shield">
       <div className="heraldic-logo__field" />
       <div className="heraldic-logo__charges" />
       <div className="heraldic-logo__leaves" />
       <div className="heraldic-logo__central-sword" />
       <div className="heraldic-logo__lion" />
       <div className="heraldic-logo__side-lions" />
+      <div
+        className="heraldic-logo__hit"
+        aria-hidden="true"
+        onPointerEnter={() => onLogoHoverChange(true)}
+        onPointerLeave={() => {
+          onLogoHoverChange(false)
+          setLionHovered(false)
+        }}
+      />
       <div
         className="heraldic-logo__lion-hit"
         aria-hidden="true"

@@ -75,6 +75,9 @@ const toMaskRect = (rect) =>
 const toWhiteMaskRect = (rect) =>
   `<rect x="${rect.x}" y="${rect.y}" width="${rect.w}" height="${rect.h}" fill="rgb(255,255,255)"/>`
 
+const toClipRect = (rect) =>
+  `<rect x="${(rect.x / VIEWPORT_W).toFixed(6)}" y="${(rect.y / VIEWPORT_H).toFixed(6)}" width="${(rect.w / VIEWPORT_W).toFixed(6)}" height="${(rect.h / VIEWPORT_H).toFixed(6)}"/>`
+
 const TAN = '#d2b795'
 const toTanRect = (rect) =>
   `<rect x="${rect.x}" y="${rect.y}" width="${rect.w}" height="${rect.h}" fill="${TAN}"/>`
@@ -212,6 +215,15 @@ for (const [filename, rects, toTag] of outputs) {
   const count = writeMask(filename, rects, toTag)
   console.log(`Processed ${filename}: ${count} pixels`)
 }
+
+const crestHitRects = [...fieldRects, ...allChargeRects, ...sideLionRects]
+const crestHitSvg =
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWPORT_W} ${VIEWPORT_H}">` +
+  '<defs><clipPath id="crestClip" clipPathUnits="objectBoundingBox">' +
+  crestHitRects.map(toClipRect).join('') +
+  '</clipPath></defs></svg>'
+fs.writeFileSync(path.join(publicDir, 'heraldic-crest-hit.svg'), crestHitSvg)
+console.log(`Processed heraldic-crest-hit.svg: ${crestHitRects.length} pixels`)
 
 const lionHitBounds = lionRects.reduce(
   (bounds, rect) => ({

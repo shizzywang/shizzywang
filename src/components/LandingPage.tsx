@@ -1,10 +1,14 @@
 import { useState } from 'react'
+import { useLandingVideoWarmup } from '../hooks/useLandingVideoWarmup'
 import { useMouseCharge } from '../hooks/useMouseCharge'
 import { HeraldicLogo } from './HeraldicLogo'
 import { LandingHoverVideo } from './LandingHoverVideo'
 import { StackLogo } from './StackLogo'
 import { Wordmark } from './Wordmark'
 import '../styles/landing.css'
+
+const BRITANNIA_SRC = '/Britannia.mp4'
+const STACK_SRC = '/stack_bg.mp4'
 
 export function LandingPage() {
   const [logoHovered, setLogoHovered] = useState(false)
@@ -14,15 +18,27 @@ export function LandingPage() {
   const { pulseOpacity, burstActive } = useMouseCharge({
     enabled: !logoHovered && !gHovered && !shizzyHovered && !stackHovered,
   })
+  const { registerVideo, isWarm, nudgeWarmup } = useLandingVideoWarmup({
+    sources: [BRITANNIA_SRC, STACK_SRC],
+  })
 
   return (
     <div
       className={`landing-page${logoHovered ? ' landing-page--dark' : ''}`}
     >
-      <LandingHoverVideo active={shizzyHovered} src="/Britannia.mp4" />
+      <LandingHoverVideo
+        active={shizzyHovered}
+        src={BRITANNIA_SRC}
+        poster="/Britannia.poster.jpg"
+        isWarm={isWarm(BRITANNIA_SRC)}
+        onVideoElementChange={registerVideo}
+      />
       <LandingHoverVideo
         active={stackHovered}
-        src="/stack_bg.mp4"
+        src={STACK_SRC}
+        poster="/stack_bg.poster.jpg"
+        isWarm={isWarm(STACK_SRC)}
+        onVideoElementChange={registerVideo}
         className="landing-page__video--stack"
       />
       <div
@@ -43,6 +59,7 @@ export function LandingPage() {
             stackHovered={stackHovered}
             onGHoverChange={setGHovered}
             onShizzyHoverChange={setShizzyHovered}
+            onShizzyHoverIntent={() => nudgeWarmup(BRITANNIA_SRC)}
           />
           <HeraldicLogo
             gHovered={gHovered}
@@ -50,7 +67,10 @@ export function LandingPage() {
             stackHovered={stackHovered}
             onLogoHoverChange={setLogoHovered}
           />
-          <StackLogo onHoverChange={setStackHovered} />
+          <StackLogo
+            onHoverChange={setStackHovered}
+            onHoverIntent={() => nudgeWarmup(STACK_SRC)}
+          />
         </div>
       </main>
     </div>

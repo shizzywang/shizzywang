@@ -169,13 +169,14 @@
 }
 
 .wordmark--stack-active {
+  color: var(--color-white);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition:
     color 0.9s var(--ease-luxury),
-    opacity var(--video-fade-out) var(--ease-standard),
-    visibility var(--video-fade-out) var(--ease-standard);
+    opacity 0.9s var(--ease-luxury),
+    visibility 0.9s var(--ease-luxury);
 }
 
 .wordmark--shizzy-active .wordmark__shizzy {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useGarbEasterEgg } from '../hooks/useGarbEasterEgg'
 import { useLandingVideoWarmup } from '../hooks/useLandingVideoWarmup'
 import { useMouseCharge } from '../hooks/useMouseCharge'
 import { HeraldicLogo } from './HeraldicLogo'
@@ -15,8 +16,14 @@ export function LandingPage() {
   const [gHovered, setGHovered] = useState(false)
   const [shizzyHovered, setShizzyHovered] = useState(false)
   const [stackHovered, setStackHovered] = useState(false)
+  const garbEasterEgg = useGarbEasterEgg()
   const { pulseOpacity, burstActive } = useMouseCharge({
-    enabled: !logoHovered && !gHovered && !shizzyHovered && !stackHovered,
+    enabled:
+      !logoHovered &&
+      !gHovered &&
+      !shizzyHovered &&
+      !stackHovered &&
+      !garbEasterEgg.isActive,
   })
   const { registerVideo, isWarm, nudgeWarmup } = useLandingVideoWarmup({
     sources: [BRITANNIA_SRC, STACK_SRC],
@@ -57,6 +64,10 @@ export function LandingPage() {
             gHovered={gHovered}
             shizzyHovered={shizzyHovered}
             stackHovered={stackHovered}
+            garbQuoteText={garbEasterEgg.displayText}
+            garbQuotePhase={
+              garbEasterEgg.phase === 'idle' ? null : garbEasterEgg.phase
+            }
             onGHoverChange={setGHovered}
             onShizzyHoverChange={setShizzyHovered}
             onShizzyHoverIntent={() => nudgeWarmup(BRITANNIA_SRC)}
@@ -66,6 +77,9 @@ export function LandingPage() {
             shizzyHovered={shizzyHovered}
             stackHovered={stackHovered}
             onLogoHoverChange={setLogoHovered}
+            onGarbActivate={garbEasterEgg.onGarbActivate}
+            activatedGarbs={garbEasterEgg.activatedGarbs}
+            garbFading={garbEasterEgg.isFading}
           />
           <StackLogo
             onHoverChange={setStackHovered}

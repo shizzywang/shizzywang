@@ -43,6 +43,14 @@ const LEAF_GROUPS = new Set([
 
 const SIDE_LION_GROUPS = ['lion_rampant_left', 'lion_rampant_right']
 
+const GARB_GROUPS = {
+  left: 'garb_left',
+  right: 'garb_right',
+  bottom: 'garb_bottom',
+}
+
+const GARB_HIT_PADDING = 24
+
 const MASK_HEADER = `<svg xmlns="http://www.w3.org/2000/svg" width="${VIEWPORT_W}" height="${VIEWPORT_H}" viewBox="0 0 ${VIEWPORT_W} ${VIEWPORT_H}" shape-rendering="crispEdges">`
 
 const rectTagRe = /<rect\b[^>]*\/?>/gi
@@ -130,6 +138,31 @@ const collectRectsFromGroup = (svg, groupId) => {
 const collectRectsFromGroups = (svg, groupIds) =>
   groupIds.flatMap((groupId) => collectRectsFromGroup(svg, groupId))
 
+const boundsFromRects = (rects) =>
+  rects.reduce(
+    (bounds, rect) => ({
+      minX: Math.min(bounds.minX, rect.x),
+      maxX: Math.max(bounds.maxX, rect.x + rect.w),
+      minY: Math.min(bounds.minY, rect.y),
+      maxY: Math.max(bounds.maxY, rect.y + rect.h),
+    }),
+    { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity },
+  )
+
+const boundsToHitPercent = (bounds, padding = 0) => {
+  const minX = Math.max(0, bounds.minX - padding)
+  const minY = Math.max(0, bounds.minY - padding)
+  const maxX = Math.min(VIEWPORT_W, bounds.maxX + padding)
+  const maxY = Math.min(VIEWPORT_H, bounds.maxY + padding)
+
+  return {
+    top: ((minY / VIEWPORT_H) * 100).toFixed(1),
+    left: ((minX / VIEWPORT_W) * 100).toFixed(1),
+    width: (((maxX - minX) / VIEWPORT_W) * 100).toFixed(1),
+    height: (((maxY - minY) / VIEWPORT_H) * 100).toFixed(1),
+  }
+}
+
 const writeMask = (filename, rects, toTag = toMaskRect) => {
   const svg = MASK_HEADER + rects.map(toTag).join('') + '</svg>'
   fs.writeFileSync(path.join(publicDir, filename), svg)
@@ -160,6 +193,12 @@ const leafRects = offsetRects(
   CREST_OFFSET_Y,
 )
 const sideLionRects = collectRectsFromGroups(crestSvg, SIDE_LION_GROUPS)
+const garbRectsById = Object.fromEntries(
+  Object.entries(GARB_GROUPS).map(([key, groupId]) => [
+    key,
+    offsetRects(collectRectsFromGroup(crestSvg, groupId), CREST_OFFSET_X, CREST_OFFSET_Y),
+  ]),
+)
 const allChargeRects = [...chargesRects, ...leafRects, ...lionRects, ...centralSwordRects]
 
 const fieldInputPath = path.join(rootDir, fieldSource)
@@ -216,6 +255,12 @@ for (const [filename, rects, toTag] of outputs) {
   console.log(`Processed ${filename}: ${count} pixels`)
 }
 
+for (const [key, rects] of Object.entries(garbRectsById)) {
+  const filename = `heraldic-garb-${key}.svg`
+  const count = writeMask(filename, rects, toMaskRect)
+  console.log(`Processed ${filename}: ${count} pixels`)
+}
+
 const crestHitRects = [...fieldRects, ...allChargeRects, ...sideLionRects]
 const crestHitSvg =
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWPORT_W} ${VIEWPORT_H}">` +
@@ -225,15 +270,7 @@ const crestHitSvg =
 fs.writeFileSync(path.join(publicDir, 'heraldic-crest-hit.svg'), crestHitSvg)
 console.log(`Processed heraldic-crest-hit.svg: ${crestHitRects.length} pixels`)
 
-const lionHitBounds = lionRects.reduce(
-  (bounds, rect) => ({
-    minX: Math.min(bounds.minX, rect.x),
-    maxX: Math.max(bounds.maxX, rect.x + rect.w),
-    minY: Math.min(bounds.minY, rect.y),
-    maxY: Math.max(bounds.maxY, rect.y + rect.h),
-  }),
-  { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity },
-)
+const lionHitBounds = boundsFromRects(lionRects)
 
 const faviconPadding = 12
 const faviconViewBox = [
@@ -260,6 +297,13 @@ console.log(
 console.log(
   `Suggested lion-hit: top=${lionHit.top}%; left=${lionHit.left}%; width=${lionHit.width}%; height=${lionHit.height}%`,
 )
+
+for (const [key, rects] of Object.entries(garbRectsById)) {
+  const garbHit = boundsToHitPercent(boundsFromRects(rects), GARB_HIT_PADDING)
+  console.log(
+    `Suggested garb-hit--${key}: top=${garbHit.top}%; left=${garbHit.left}%; width=${garbHit.width}%; height=${garbHit.height}%`,
+  )
+}
 
 const obsolete = [
   'heraldic-shield-rest.svg',

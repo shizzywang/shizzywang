@@ -140,6 +140,25 @@
   }
 }
 
+@keyframes wordmark-garb-return {
+  0% {
+    opacity: 0;
+    transform: translateY(0.85rem) scale(0.965);
+    filter: blur(7px);
+  }
+
+  45% {
+    opacity: 1;
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
 @keyframes landing-crest-enter {
   from {
     opacity: 0;
@@ -153,12 +172,15 @@
 }
 
 .wordmark {
+  --wordmark-size: clamp(1.75rem, min(11.6vw, 14vmin), 12.5rem);
+  position: relative;
+  width: min(92vw, 48rem);
+  height: var(--wordmark-size);
   font-family: 'Jacquard 24', system-ui, serif;
-  font-size: clamp(1.75rem, min(11.6vw, 14vmin), 12.5rem);
+  font-size: var(--wordmark-size);
   font-weight: 400;
   line-height: 1;
   color: var(--color-tan);
-  white-space: nowrap;
   text-align: center;
   opacity: 0;
   animation: landing-wordmark-enter 1.2s var(--ease-luxury) forwards;
@@ -194,6 +216,60 @@
   color: var(--color-gold);
 }
 
+.wordmark__brand {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+  transition:
+    opacity 0.9s var(--ease-luxury),
+    visibility 0.9s var(--ease-luxury);
+}
+
+.wordmark--garb-quote .wordmark__brand {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.wordmark__quote {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 0.35rem;
+  font-family: inherit;
+  font-size: clamp(0.7rem, min(3.4vw, 3.8vmin), 1.75rem);
+  font-weight: inherit;
+  line-height: 1.2;
+  white-space: normal;
+  text-align: center;
+  transition: opacity 0.9s var(--ease-luxury);
+}
+
+.wordmark--garb-fading .wordmark__quote {
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-luxury);
+}
+
+.wordmark--garb-fading.wordmark--garb-quote .wordmark__brand {
+  visibility: visible;
+  pointer-events: none;
+  opacity: 0;
+  animation: wordmark-garb-return 1.15s var(--ease-luxury) 0.3s forwards;
+}
+
+.wordmark:not(.wordmark--garb-quote) .wordmark__brand {
+  opacity: 1;
+  visibility: visible;
+}
+
 .heraldic-logo {
   --crest-height: clamp(105px, min(16.4vw, 18.9vmin), 284px);
   position: relative;
@@ -219,7 +295,8 @@
 .heraldic-logo__leaves,
 .heraldic-logo__lion,
 .heraldic-logo__central-sword,
-.heraldic-logo__side-lions {
+.heraldic-logo__side-lions,
+.heraldic-logo__garb {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -276,6 +353,36 @@
   opacity: 0;
 }
 
+.heraldic-logo__garb {
+  z-index: 1;
+  opacity: 0;
+  background-color: var(--color-gold);
+}
+
+.heraldic-logo__garb--left {
+  mask-image: url('/heraldic-garb-left.svg');
+  -webkit-mask-image: url('/heraldic-garb-left.svg');
+}
+
+.heraldic-logo__garb--right {
+  mask-image: url('/heraldic-garb-right.svg');
+  -webkit-mask-image: url('/heraldic-garb-right.svg');
+}
+
+.heraldic-logo__garb--bottom {
+  mask-image: url('/heraldic-garb-bottom.svg');
+  -webkit-mask-image: url('/heraldic-garb-bottom.svg');
+}
+
+.heraldic-logo__garb--active {
+  opacity: 1;
+}
+
+.heraldic-logo--garb-fading .heraldic-logo__garb--active {
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-luxury);
+}
+
 .heraldic-logo__hit {
   position: absolute;
   inset: 0;
@@ -295,6 +402,34 @@
   z-index: 1;
   pointer-events: auto;
   cursor: default;
+}
+
+.heraldic-logo__garb-hit {
+  position: absolute;
+  z-index: 2;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.heraldic-logo__garb-hit--left {
+  top: 40.2%;
+  left: 32.5%;
+  width: 12.2%;
+  height: 23.6%;
+}
+
+.heraldic-logo__garb-hit--right {
+  top: 40.2%;
+  left: 55.3%;
+  width: 12.2%;
+  height: 23.6%;
+}
+
+.heraldic-logo__garb-hit--bottom {
+  top: 60.7%;
+  left: 43.6%;
+  width: 12.8%;
+  height: 22.8%;
 }
 
 .heraldic-logo--active .heraldic-logo__field {
@@ -359,7 +494,11 @@
 
 @media (orientation: landscape) and (max-height: 500px) {
   .wordmark {
-    font-size: clamp(1.5rem, 14vh, 5rem);
+    --wordmark-size: clamp(1.5rem, 14vh, 5rem);
+  }
+
+  .wordmark__quote {
+    font-size: clamp(0.55rem, 2.8vh, 1.05rem);
   }
 
   .heraldic-logo {
@@ -392,7 +531,10 @@
   .heraldic-logo__leaves,
   .heraldic-logo__lion,
   .heraldic-logo__central-sword,
-  .heraldic-logo__side-lions {
+  .heraldic-logo__side-lions,
+  .heraldic-logo__garb,
+  .wordmark__brand,
+  .wordmark__quote {
     transition-duration: 0.01ms;
   }
 
@@ -403,5 +545,17 @@
     opacity: 1;
     transform: none;
     filter: none;
+  }
+
+  .wordmark--garb-fading .wordmark__quote,
+  .wordmark--garb-fading.wordmark--garb-quote .wordmark__brand {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .wordmark--garb-fading .wordmark__quote {
+    opacity: 0;
   }
 }

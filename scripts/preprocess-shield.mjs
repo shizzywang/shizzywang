@@ -182,6 +182,13 @@ const centralSwordRects = offsetRects(
   CREST_OFFSET_X,
   CREST_OFFSET_Y,
 )
+// The central sword points down: hilt (pommel, grip, crossguard) sits above the
+// blade. Everything above this y boundary is the handle, which can be tinted
+// independently (e.g. gold) while the blade stays argent.
+const CENTRAL_SWORD_HANDLE_MAX_Y = 701
+const centralSwordHandleRects = centralSwordRects.filter(
+  (rect) => rect.y + rect.h <= CENTRAL_SWORD_HANDLE_MAX_Y,
+)
 const chargesRects = offsetRects(
   collectRectsFromGroups(crestSvg, [...CHARGE_GROUPS]),
   CREST_OFFSET_X,
@@ -246,6 +253,7 @@ const outputs = [
   ['heraldic-leaves.svg', leafRects, toMaskRect],
   ['heraldic-lion.svg', lionRects, toMaskRect],
   ['heraldic-central-sword.svg', centralSwordRects, toMaskRect],
+  ['heraldic-central-sword-handle.svg', centralSwordHandleRects, toMaskRect],
   ['heraldic-shield.svg', allChargeRects, toMaskRect],
   ['heraldic-side-lions.svg', sideLionRects, toMaskRect],
 ]

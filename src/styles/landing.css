@@ -295,6 +295,7 @@
 .heraldic-logo__leaves,
 .heraldic-logo__lion,
 .heraldic-logo__central-sword,
+.heraldic-logo__central-sword-handle,
 .heraldic-logo__side-lions,
 .heraldic-logo__garb {
   position: absolute;
@@ -344,6 +345,14 @@
   background-color: var(--color-tan);
   mask-image: url('/heraldic-central-sword.svg');
   -webkit-mask-image: url('/heraldic-central-sword.svg');
+}
+
+/* Gold hilt overlay, sits on top of the argent sword and only appears on g-hover */
+.heraldic-logo__central-sword-handle {
+  background-color: var(--color-gold);
+  mask-image: url('/heraldic-central-sword-handle.svg');
+  -webkit-mask-image: url('/heraldic-central-sword-handle.svg');
+  opacity: 0;
 }
 
 .heraldic-logo__side-lions {
@@ -446,6 +455,10 @@
   background-color: var(--color-argent);
 }
 
+.heraldic-logo--active .heraldic-logo__central-sword-handle {
+  opacity: 1;
+}
+
 .heraldic-logo--lion-active .heraldic-logo__lion {
   background-color: var(--color-gules);
 }
@@ -475,7 +488,8 @@
   height: clamp(72px, 10vmin, 140px);
   width: auto;
   margin-top: clamp(48px, 7vmin, 96px);
-  cursor: default;
+  cursor: pointer;
+  text-decoration: none;
   opacity: 0;
   transform-origin: center center;
   animation: landing-crest-enter 1.3s var(--ease-luxury) 0.75s forwards;
@@ -531,6 +545,7 @@
   .heraldic-logo__leaves,
   .heraldic-logo__lion,
   .heraldic-logo__central-sword,
+  .heraldic-logo__central-sword-handle,
   .heraldic-logo__side-lions,
   .heraldic-logo__garb,
   .wordmark__brand,

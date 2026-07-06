@@ -14,7 +14,8 @@
 
   position: relative;
   min-height: 100dvh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background-color: var(--color-white);
 }
 
@@ -122,8 +123,6 @@
   flex-direction: column;
   align-items: center;
   max-width: 100%;
-  max-height: 92dvh;
-  overflow: clip;
 }
 
 @keyframes landing-wordmark-enter {
@@ -506,6 +505,102 @@
   transform-origin: center;
 }
 
+.spotify-playlists {
+  width: min(100%, 420px);
+  margin-top: clamp(32px, 5vmin, 56px);
+  border: 1px solid var(--color-tan);
+  border-radius: 12px;
+  background-color: transparent;
+  color: var(--color-tan);
+  opacity: 0;
+  visibility: visible;
+  transform-origin: center center;
+  overflow: hidden;
+  animation: landing-crest-enter 1.3s var(--ease-luxury) 1s forwards;
+}
+
+.spotify-playlists:not(.spotify-playlists--hidden) {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--video-fade-out) var(--ease-standard),
+    visibility 0s var(--ease-standard);
+}
+
+.spotify-playlists--hidden {
+  animation: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--video-fade-out) var(--ease-standard),
+    visibility 0s linear var(--video-fade-out);
+}
+
+.spotify-playlists__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.85rem;
+  color: var(--color-tan);
+  text-decoration: none;
+  transition: background-color 0.25s var(--ease-luxury);
+}
+
+.spotify-playlists__bar:hover {
+  background-color: color-mix(in srgb, var(--color-tan) 12%, transparent);
+}
+
+.spotify-playlists__logo {
+  flex: 0 0 auto;
+  display: block;
+}
+
+.spotify-playlists__meta {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.spotify-playlists__title {
+  overflow: hidden;
+  color: var(--color-tan);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spotify-playlists__subtitle {
+  overflow: hidden;
+  color: var(--color-tan);
+  font-size: 0.7rem;
+  line-height: 1.2;
+  opacity: 0.75;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spotify-playlists__play {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--color-gold);
+  color: var(--color-black);
+  transition: transform 0.2s var(--ease-luxury);
+}
+
+.spotify-playlists__bar:hover .spotify-playlists__play {
+  transform: scale(1.06);
+}
+
 @media (orientation: landscape) and (max-height: 500px) {
   .wordmark {
     --wordmark-size: clamp(1.5rem, 14vh, 5rem);
@@ -532,6 +627,10 @@
     height: clamp(48px, 14vh, 96px);
     margin-top: clamp(24px, 4vh, 48px);
   }
+
+  .spotify-playlists {
+    margin-top: clamp(16px, 3vh, 32px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -555,11 +654,22 @@
 
   .wordmark,
   .heraldic-logo,
-  .stack-logo {
+  .stack-logo,
+  .spotify-playlists {
     animation: none;
     opacity: 1;
     transform: none;
     filter: none;
+  }
+
+  .spotify-playlists--hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .spotify-playlists__bar,
+  .spotify-playlists__play {
+    transition-duration: 0.01ms;
   }
 
   .wordmark--garb-fading .wordmark__quote,

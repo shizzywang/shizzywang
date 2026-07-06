@@ -4,6 +4,7 @@ import { useLandingVideoWarmup } from '../hooks/useLandingVideoWarmup'
 import { useMouseCharge } from '../hooks/useMouseCharge'
 import { HeraldicLogo } from './HeraldicLogo'
 import { LandingHoverVideo } from './LandingHoverVideo'
+import { SpotifyPlaylists } from './SpotifyPlaylists'
 import { StackLogo } from './StackLogo'
 import { Wordmark } from './Wordmark'
 import '../styles/landing.css'
@@ -85,6 +86,7 @@ export function LandingPage() {
             onHoverChange={setStackHovered}
             onHoverIntent={() => nudgeWarmup(STACK_SRC)}
           />
+          <SpotifyPlaylists visible={!stackHovered} />
         </div>
       </main>
     </div>

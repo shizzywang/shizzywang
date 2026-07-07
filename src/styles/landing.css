@@ -519,8 +519,12 @@
   animation: landing-crest-enter 1.3s var(--ease-luxury) 1s forwards;
 }
 
-.spotify-playlists:not(.spotify-playlists--hidden) {
+.spotify-playlists--entered {
+  animation: none;
   opacity: 1;
+}
+
+.spotify-playlists--entered:not(.spotify-playlists--hidden) {
   visibility: visible;
   transition:
     opacity var(--video-fade-out) var(--ease-standard),

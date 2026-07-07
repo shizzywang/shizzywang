@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   SPOTIFY_PROFILE_SUBTITLE,
   SPOTIFY_PROFILE_TITLE,
@@ -26,16 +27,24 @@ function SpotifyLogo() {
 }
 
 export function SpotifyPlaylists({ visible = true }: SpotifyPlaylistsProps) {
+  const [entered, setEntered] = useState(false)
+
   return (
     <section
       className={[
         'spotify-playlists',
+        entered && 'spotify-playlists--entered',
         !visible && 'spotify-playlists--hidden',
       ]
         .filter(Boolean)
         .join(' ')}
       aria-label="Spotify playlists"
       aria-hidden={!visible}
+      onAnimationEnd={(event) => {
+        if (event.animationName === 'landing-crest-enter') {
+          setEntered(true)
+        }
+      }}
     >
       <a
         className="spotify-playlists__bar"

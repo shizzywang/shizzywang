@@ -68,6 +68,7 @@ export function HeraldicLogo({
 
   return (
     <div className={className} role="img" aria-label="Shizzywang heraldic shield">
+      <div className="heraldic-logo__base" />
       <div className="heraldic-logo__field" />
       <div className="heraldic-logo__charges" />
       <div className="heraldic-logo__leaves" />

@@ -255,6 +255,7 @@ const outputs = [
   ['heraldic-central-sword.svg', centralSwordRects, toMaskRect],
   ['heraldic-central-sword-handle.svg', centralSwordHandleRects, toMaskRect],
   ['heraldic-shield.svg', allChargeRects, toMaskRect],
+  ['heraldic-shield-filled.svg', allChargeRects, toTanRect],
   ['heraldic-side-lions.svg', sideLionRects, toMaskRect],
 ]
 

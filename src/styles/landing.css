@@ -271,13 +271,15 @@
 
 .heraldic-logo {
   --crest-height: clamp(105px, min(16.4vw, 18.9vmin), 284px);
+  /* Snap to 125 or 250 so 1500px source art scales by 1/12 or 1/6 (no subpixel rects) */
+  --crest-height-snapped: clamp(125px, round(var(--crest-height), 125px), 250px);
   position: relative;
-  width: auto;
-  height: round(var(--crest-height), 25px);
-  aspect-ratio: 2040 / 1500;
+  width: round(calc(var(--crest-height-snapped) * 2040 / 1500), 1px);
+  height: var(--crest-height-snapped);
   margin-top: clamp(20px, 3.9vmin, 67px);
   cursor: default;
   pointer-events: none;
+  isolation: isolate;
   opacity: 0;
   transform-origin: center center;
   animation: landing-crest-enter 1.3s var(--ease-luxury) 0.45s forwards;
@@ -285,7 +287,9 @@
 
 @supports not (height: round(1px, 1px)) {
   .heraldic-logo {
-    height: clamp(125px, min(16.4vw, 18.9vmin), 275px);
+    --crest-height-snapped: 150px;
+    width: 204px;
+    height: var(--crest-height-snapped);
   }
 }
 
@@ -308,11 +312,27 @@
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
   transition:
     background-color 0.4s var(--ease-standard),
     opacity 0.4s var(--ease-standard);
+}
+
+.heraldic-logo__base {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.4s var(--ease-standard);
+  background: url('/heraldic-shield-filled.svg') center / contain no-repeat;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.heraldic-logo__charges,
+.heraldic-logo__leaves,
+.heraldic-logo__lion,
+.heraldic-logo__central-sword {
+  opacity: 0;
 }
 
 .heraldic-logo__field {
@@ -441,6 +461,32 @@
 }
 
 .heraldic-logo--active .heraldic-logo__field {
+  opacity: 1;
+}
+
+.heraldic-logo--active .heraldic-logo__base,
+.heraldic-logo--lion-active .heraldic-logo__base,
+.heraldic-logo--shizzy-active .heraldic-logo__base,
+.heraldic-logo--stack-active .heraldic-logo__base {
+  opacity: 0;
+}
+
+.heraldic-logo--active .heraldic-logo__charges,
+.heraldic-logo--active .heraldic-logo__leaves,
+.heraldic-logo--active .heraldic-logo__lion,
+.heraldic-logo--active .heraldic-logo__central-sword,
+.heraldic-logo--lion-active .heraldic-logo__charges,
+.heraldic-logo--lion-active .heraldic-logo__leaves,
+.heraldic-logo--lion-active .heraldic-logo__lion,
+.heraldic-logo--lion-active .heraldic-logo__central-sword,
+.heraldic-logo--shizzy-active .heraldic-logo__charges,
+.heraldic-logo--shizzy-active .heraldic-logo__leaves,
+.heraldic-logo--shizzy-active .heraldic-logo__lion,
+.heraldic-logo--shizzy-active .heraldic-logo__central-sword,
+.heraldic-logo--stack-active .heraldic-logo__charges,
+.heraldic-logo--stack-active .heraldic-logo__leaves,
+.heraldic-logo--stack-active .heraldic-logo__lion,
+.heraldic-logo--stack-active .heraldic-logo__central-sword {
   opacity: 1;
 }
 
@@ -616,14 +662,17 @@
 
   .heraldic-logo {
     --crest-height: clamp(76px, 21vh, 168px);
-    width: auto;
-    height: round(var(--crest-height), 25px);
+    --crest-height-snapped: clamp(125px, round(var(--crest-height), 125px), 250px);
+    width: round(calc(var(--crest-height-snapped) * 2040 / 1500), 1px);
+    height: var(--crest-height-snapped);
     margin-top: 0.75rem;
   }
 
   @supports not (height: round(1px, 1px)) {
     .heraldic-logo {
-      height: clamp(100px, 21vh, 150px);
+      --crest-height-snapped: 125px;
+      width: 170px;
+      height: var(--crest-height-snapped);
     }
   }
 
@@ -643,6 +692,7 @@
   .wordmark,
   .wordmark__shizzy,
   .wordmark__letter-g,
+  .heraldic-logo__base,
   .heraldic-logo__field,
   .heraldic-logo__charges,
   .heraldic-logo__leaves,

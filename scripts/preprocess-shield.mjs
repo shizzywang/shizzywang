@@ -1,10 +1,12 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { tracePassantGuardantSprite } from './trace-passant-lion.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.join(__dirname, '..')
 const publicDir = path.join(rootDir, 'public')
+const assetsDir = path.join(rootDir, 'src', 'assets', 'heraldic')
 
 const crestSource = 'shizzywang_crest_side_lions_more_gap_wide_viewport.svg'
 const fieldSource = 'heraldic_shield_black_white copy.svg'
@@ -26,9 +28,10 @@ const LION_GROUPS = new Set([
 
 const CENTRAL_SWORD_GROUPS = new Set(['center_sword'])
 
+const BORDER_GROUPS = ['shield_outer_border', 'shield_inner_border']
+
 const CHARGE_GROUPS = new Set([
-  'shield_outer_border',
-  'shield_inner_border',
+  ...BORDER_GROUPS,
   'garb_left',
   'garb_right',
   'garb_bottom',
@@ -41,8 +44,6 @@ const LEAF_GROUPS = new Set([
   'leaf_mid_right',
 ])
 
-const SIDE_LION_GROUPS = ['lion_rampant_left', 'lion_rampant_right']
-
 const GARB_GROUPS = {
   left: 'garb_left',
   right: 'garb_right',
@@ -50,6 +51,18 @@ const GARB_GROUPS = {
 }
 
 const GARB_HIT_PADDING = 24
+
+// England "in pale": three traced passant-guardant sprites stacked vertically,
+// centered in the lower shield field under the existing top lion (ends ~y=560).
+const THREE_LION_CENTER_X = 1020
+const THREE_LION_FIELD_TOP = 590
+const THREE_LION_FIELD_BOTTOM = 1180
+const THREE_LION_TARGET_W = 620
+const PASSANT_SPRITE_PATH = path.join(assetsDir, 'passant-guardant-sprite.svg')
+const ROYAL_ARMS_PNG = path.join(
+  process.env.HOME,
+  '.cursor/projects/Users-dev-shizzywang/assets/Royal_arms_of_England-74fadcc9-98e1-4cc7-ae81-f6ce2cfea28f.png',
+)
 
 const MASK_HEADER = `<svg xmlns="http://www.w3.org/2000/svg" width="${VIEWPORT_W}" height="${VIEWPORT_H}" viewBox="0 0 ${VIEWPORT_W} ${VIEWPORT_H}" shape-rendering="crispEdges">`
 
@@ -87,8 +100,11 @@ const toClipRect = (rect) =>
   `<rect x="${(rect.x / VIEWPORT_W).toFixed(6)}" y="${(rect.y / VIEWPORT_H).toFixed(6)}" width="${(rect.w / VIEWPORT_W).toFixed(6)}" height="${(rect.h / VIEWPORT_H).toFixed(6)}"/>`
 
 const TAN = '#d2b795'
+const WHITE = '#ffffff'
 const toTanRect = (rect) =>
   `<rect x="${rect.x}" y="${rect.y}" width="${rect.w}" height="${rect.h}" fill="${TAN}"/>`
+const toFilledRect = (color) => (rect) =>
+  `<rect x="${rect.x}" y="${rect.y}" width="${rect.w}" height="${rect.h}" fill="${color}"/>`
 
 const extractGroupById = (svg, groupId) => {
   const idPattern = new RegExp(`<g\\b[^>]*\\bid="${groupId}"[^>]*>`, 'i')
@@ -163,11 +179,101 @@ const boundsToHitPercent = (bounds, padding = 0) => {
   }
 }
 
-const writeMask = (filename, rects, toTag = toMaskRect) => {
+const writeSvg = (dir, filename, rects, toTag = toMaskRect) => {
   const svg = MASK_HEADER + rects.map(toTag).join('') + '</svg>'
-  fs.writeFileSync(path.join(publicDir, filename), svg)
+  fs.writeFileSync(path.join(dir, filename), svg)
   return rects.length
 }
+
+const writeMask = (filename, rects, toTag = toMaskRect) =>
+  writeSvg(publicDir, filename, rects, toTag)
+
+const scaleRectsAboutOrigin = (rects, scale, originX, originY) =>
+  rects.map((rect) => ({
+    x: Math.round(originX + (rect.x - originX) * scale),
+    y: Math.round(originY + (rect.y - originY) * scale),
+    w: Math.max(1, Math.round(rect.w * scale)),
+    h: Math.max(1, Math.round(rect.h * scale)),
+  }))
+
+const placeRects = (rects, anchorX, anchorY, align = 'topleft') => {
+  const bounds = boundsFromRects(rects)
+  const centerX = (bounds.minX + bounds.maxX) / 2
+  const dx =
+    align === 'topcenter' ? anchorX - centerX : anchorX - bounds.minX
+  const dy = anchorY - bounds.minY
+  return rects.map((rect) => ({
+    ...rect,
+    x: Math.round(rect.x + dx),
+    y: Math.round(rect.y + dy),
+    w: rect.w,
+    h: rect.h,
+  }))
+}
+
+const loadPassantSpriteRects = (svg) => {
+  const rects = []
+  for (const tag of svg.matchAll(rectTagRe)) {
+    const rect = parseRectTag(tag[0])
+    if (Number.isFinite(rect.x) && Number.isFinite(rect.y)) {
+      rects.push(rect)
+    }
+  }
+  return rects
+}
+
+const generateThreePassantLions = (spriteRects) => {
+  const bounds = boundsFromRects(spriteRects)
+  const spriteW = bounds.maxX - bounds.minX
+  const spriteH = bounds.maxY - bounds.minY
+  const fieldH = THREE_LION_FIELD_BOTTOM - THREE_LION_FIELD_TOP
+
+  const normalized = spriteRects.map((rect) => ({
+    ...rect,
+    x: rect.x - bounds.minX,
+    y: rect.y - bounds.minY,
+  }))
+
+  const scaleByWidth = THREE_LION_TARGET_W / spriteW
+  const lionHAtWidth = spriteH * scaleByWidth
+  const gapAtWidth = (fieldH - lionHAtWidth * 3) / 4
+  const minGap = 28
+  const scale =
+    gapAtWidth >= minGap
+      ? scaleByWidth
+      : (fieldH - minGap * 4) / (spriteH * 3)
+
+  const scaled = scaleRectsAboutOrigin(normalized, scale, 0, 0)
+  const scaledBounds = boundsFromRects(scaled)
+  const lionH = scaledBounds.maxY - scaledBounds.minY
+  const remaining = fieldH - lionH * 3
+  const gap = remaining / 4
+  const tops = [0, 1, 2].map(
+    (i) => THREE_LION_FIELD_TOP + gap + i * (lionH + gap),
+  )
+
+  return tops.flatMap((y) =>
+    placeRects(scaled, THREE_LION_CENTER_X, y, 'topcenter'),
+  )
+}
+
+fs.mkdirSync(assetsDir, { recursive: true })
+
+if (fs.existsSync(ROYAL_ARMS_PNG)) {
+  await tracePassantGuardantSprite()
+} else if (!fs.existsSync(PASSANT_SPRITE_PATH)) {
+  throw new Error(
+    `Missing ${PASSANT_SPRITE_PATH} and Royal Arms reference PNG; run trace-passant-lion.mjs once with the reference asset present.`,
+  )
+} else {
+  console.log('Using existing passant-guardant-sprite.svg')
+}
+
+const passantSpriteSvg = fs.readFileSync(PASSANT_SPRITE_PATH, 'utf8')
+const passantSpriteRects = loadPassantSpriteRects(passantSpriteSvg)
+console.log(
+  `Loaded passant-guardant sprite: ${passantSpriteRects.length} rects`,
+)
 
 const crestPath = path.join(rootDir, crestSource)
 const crestSvg = fs.readFileSync(crestPath, 'utf8')
@@ -189,6 +295,11 @@ const CENTRAL_SWORD_HANDLE_MAX_Y = 701
 const centralSwordHandleRects = centralSwordRects.filter(
   (rect) => rect.y + rect.h <= CENTRAL_SWORD_HANDLE_MAX_Y,
 )
+const borderRects = offsetRects(
+  collectRectsFromGroups(crestSvg, BORDER_GROUPS),
+  CREST_OFFSET_X,
+  CREST_OFFSET_Y,
+)
 const chargesRects = offsetRects(
   collectRectsFromGroups(crestSvg, [...CHARGE_GROUPS]),
   CREST_OFFSET_X,
@@ -199,7 +310,7 @@ const leafRects = offsetRects(
   CREST_OFFSET_X,
   CREST_OFFSET_Y,
 )
-const sideLionRects = collectRectsFromGroups(crestSvg, SIDE_LION_GROUPS)
+const threeLionRects = generateThreePassantLions(passantSpriteRects)
 const garbRectsById = Object.fromEntries(
   Object.entries(GARB_GROUPS).map(([key, groupId]) => [
     key,
@@ -207,6 +318,12 @@ const garbRectsById = Object.fromEntries(
   ]),
 )
 const allChargeRects = [...chargesRects, ...leafRects, ...lionRects, ...centralSwordRects]
+const shizzyChargeRects = [
+  ...borderRects,
+  ...leafRects,
+  ...lionRects,
+  ...threeLionRects,
+]
 
 const fieldInputPath = path.join(rootDir, fieldSource)
 const fieldOriginal = fs.readFileSync(fieldInputPath, 'utf8')
@@ -254,14 +371,23 @@ const outputs = [
   ['heraldic-lion.svg', lionRects, toMaskRect],
   ['heraldic-central-sword.svg', centralSwordRects, toMaskRect],
   ['heraldic-central-sword-handle.svg', centralSwordHandleRects, toMaskRect],
+  ['heraldic-three-lions.svg', threeLionRects, toMaskRect],
   ['heraldic-shield.svg', allChargeRects, toMaskRect],
-  ['heraldic-shield-filled.svg', allChargeRects, toTanRect],
-  ['heraldic-side-lions.svg', sideLionRects, toMaskRect],
 ]
 
 for (const [filename, rects, toTag] of outputs) {
   const count = writeMask(filename, rects, toTag)
   console.log(`Processed ${filename}: ${count} pixels`)
+}
+
+const assetOutputs = [
+  ['heraldic-shield-filled.svg', allChargeRects, toTanRect],
+  ['heraldic-shizzy-filled.svg', shizzyChargeRects, toFilledRect(WHITE)],
+]
+
+for (const [filename, rects, toTag] of assetOutputs) {
+  const count = writeSvg(assetsDir, filename, rects, toTag)
+  console.log(`Processed src/assets/heraldic/${filename}: ${count} pixels`)
 }
 
 for (const [key, rects] of Object.entries(garbRectsById)) {
@@ -270,7 +396,7 @@ for (const [key, rects] of Object.entries(garbRectsById)) {
   console.log(`Processed ${filename}: ${count} pixels`)
 }
 
-const crestHitRects = [...fieldRects, ...allChargeRects, ...sideLionRects]
+const crestHitRects = [...fieldRects, ...allChargeRects]
 const crestHitSvg =
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWPORT_W} ${VIEWPORT_H}">` +
   '<defs><clipPath id="crestClip" clipPathUnits="objectBoundingBox">' +
@@ -306,6 +432,7 @@ console.log(
 console.log(
   `Suggested lion-hit: top=${lionHit.top}%; left=${lionHit.left}%; width=${lionHit.width}%; height=${lionHit.height}%`,
 )
+console.log(`Processed heraldic-three-lions.svg: ${threeLionRects.length} pixels`)
 
 for (const [key, rects] of Object.entries(garbRectsById)) {
   const garbHit = boundsToHitPercent(boundsFromRects(rects), GARB_HIT_PADDING)
@@ -314,19 +441,21 @@ for (const [key, rects] of Object.entries(garbRectsById)) {
   )
 }
 
-const obsolete = [
+const obsoletePublic = [
   'heraldic-shield-rest.svg',
   'heraldic-shield-figures.svg',
   'heraldic-held-blade.svg',
   'heraldic-shield-outline.svg',
   'heraldic-sword.svg',
   'heraldic-charges.svg',
+  'heraldic-side-lions.svg',
+  'heraldic-shield-filled.svg',
 ]
 
-for (const filename of obsolete) {
+for (const filename of obsoletePublic) {
   const filePath = path.join(publicDir, filename)
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath)
-    console.log(`Removed ${filename}`)
+    console.log(`Removed public/${filename}`)
   }
 }

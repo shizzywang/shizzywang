@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import shieldFilledUrl from '../assets/heraldic/heraldic-shield-filled.svg'
+import shieldShizzyFilledUrl from '../assets/heraldic/heraldic-shizzy-filled.svg'
 import type { GarbId } from '../hooks/useGarbEasterEgg'
 
 type HeraldicLogoProps = {
@@ -13,6 +15,10 @@ type HeraldicLogoProps = {
 
 const GARB_IDS: GarbId[] = ['left', 'right', 'bottom']
 const GARB_CHAIN: GarbId[] = ['right', 'left', 'bottom']
+
+const crestLayerStyle = (url: string) => ({
+  backgroundImage: `url(${url})`,
+})
 
 function prerequisiteGarb(garb: GarbId): GarbId | null {
   const index = GARB_CHAIN.indexOf(garb)
@@ -68,14 +74,20 @@ export function HeraldicLogo({
 
   return (
     <div className={className} role="img" aria-label="Shizzywang heraldic shield">
-      <div className="heraldic-logo__base" />
+      <div
+        className="heraldic-logo__base"
+        style={crestLayerStyle(shieldFilledUrl)}
+      />
+      <div
+        className="heraldic-logo__shizzy"
+        style={crestLayerStyle(shieldShizzyFilledUrl)}
+      />
       <div className="heraldic-logo__field" />
       <div className="heraldic-logo__charges" />
       <div className="heraldic-logo__leaves" />
       <div className="heraldic-logo__central-sword" />
       <div className="heraldic-logo__central-sword-handle" />
       <div className="heraldic-logo__lion" />
-      <div className="heraldic-logo__side-lions" />
       {GARB_IDS.map((garb) => (
         <div
           key={garb}

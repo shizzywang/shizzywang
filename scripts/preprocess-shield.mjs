@@ -2,6 +2,11 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { tracePassantGuardantSprite } from './trace-passant-lion.mjs'
+import {
+  gridToRects,
+  rectsToGrid,
+  scaleGridNearest,
+} from './heraldic-grid.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.join(__dirname, '..')
@@ -59,10 +64,7 @@ const THREE_LION_FIELD_TOP = 590
 const THREE_LION_FIELD_BOTTOM = 1180
 const THREE_LION_TARGET_W = 620
 const PASSANT_SPRITE_PATH = path.join(assetsDir, 'passant-guardant-sprite.svg')
-const ROYAL_ARMS_PNG = path.join(
-  process.env.HOME,
-  '.cursor/projects/Users-dev-shizzywang/assets/Royal_arms_of_England-74fadcc9-98e1-4cc7-ae81-f6ce2cfea28f.png',
-)
+const ROYAL_ARMS_SVG = path.join(assetsDir, 'royal-arms-reference.svg')
 
 const MASK_HEADER = `<svg xmlns="http://www.w3.org/2000/svg" width="${VIEWPORT_W}" height="${VIEWPORT_H}" viewBox="0 0 ${VIEWPORT_W} ${VIEWPORT_H}" shape-rendering="crispEdges">`
 
@@ -188,14 +190,6 @@ const writeSvg = (dir, filename, rects, toTag = toMaskRect) => {
 const writeMask = (filename, rects, toTag = toMaskRect) =>
   writeSvg(publicDir, filename, rects, toTag)
 
-const scaleRectsAboutOrigin = (rects, scale, originX, originY) =>
-  rects.map((rect) => ({
-    x: Math.round(originX + (rect.x - originX) * scale),
-    y: Math.round(originY + (rect.y - originY) * scale),
-    w: Math.max(1, Math.round(rect.w * scale)),
-    h: Math.max(1, Math.round(rect.h * scale)),
-  }))
-
 const placeRects = (rects, anchorX, anchorY, align = 'topleft') => {
   const bounds = boundsFromRects(rects)
   const centerX = (bounds.minX + bounds.maxX) / 2
@@ -222,48 +216,52 @@ const loadPassantSpriteRects = (svg) => {
   return rects
 }
 
-const generateThreePassantLions = (spriteRects) => {
-  const bounds = boundsFromRects(spriteRects)
-  const spriteW = bounds.maxX - bounds.minX
-  const spriteH = bounds.maxY - bounds.minY
+const generateThreePassantLions = (spriteRects, spriteW, spriteH) => {
   const fieldH = THREE_LION_FIELD_BOTTOM - THREE_LION_FIELD_TOP
-
-  const normalized = spriteRects.map((rect) => ({
-    ...rect,
-    x: rect.x - bounds.minX,
-    y: rect.y - bounds.minY,
-  }))
 
   const scaleByWidth = THREE_LION_TARGET_W / spriteW
   const lionHAtWidth = spriteH * scaleByWidth
   const gapAtWidth = (fieldH - lionHAtWidth * 3) / 4
   const minGap = 28
-  const scale =
+  const targetW = Math.round(
     gapAtWidth >= minGap
-      ? scaleByWidth
-      : (fieldH - minGap * 4) / (spriteH * 3)
+      ? THREE_LION_TARGET_W
+      : spriteW * ((fieldH - minGap * 4) / (spriteH * 3)),
+  )
+  const targetH = Math.round(spriteH * (targetW / spriteW))
 
-  const scaled = scaleRectsAboutOrigin(normalized, scale, 0, 0)
-  const scaledBounds = boundsFromRects(scaled)
-  const lionH = scaledBounds.maxY - scaledBounds.minY
+  const spriteGrid = rectsToGrid(spriteRects, spriteW, spriteH)
+  const scaledGrid = scaleGridNearest(spriteGrid, spriteW, spriteH, targetW, targetH)
+  const lionRects = gridToRects(scaledGrid, targetW, targetH)
+
+  const lionH = targetH
   const remaining = fieldH - lionH * 3
   const gap = remaining / 4
   const tops = [0, 1, 2].map(
     (i) => THREE_LION_FIELD_TOP + gap + i * (lionH + gap),
   )
 
-  return tops.flatMap((y) =>
-    placeRects(scaled, THREE_LION_CENTER_X, y, 'topcenter'),
+  const placed = tops.flatMap((y) =>
+    placeRects(lionRects, THREE_LION_CENTER_X, y, 'topcenter'),
   )
+
+  const badHeights = placed.filter((rect) => rect.h !== 1).length
+  if (badHeights > 0) {
+    console.warn(
+      `Warning: three-lion output has ${badHeights} rects with height != 1`,
+    )
+  }
+
+  return placed
 }
 
 fs.mkdirSync(assetsDir, { recursive: true })
 
-if (fs.existsSync(ROYAL_ARMS_PNG)) {
-  await tracePassantGuardantSprite()
+if (fs.existsSync(ROYAL_ARMS_SVG)) {
+  await tracePassantGuardantSprite({ sourcePath: ROYAL_ARMS_SVG })
 } else if (!fs.existsSync(PASSANT_SPRITE_PATH)) {
   throw new Error(
-    `Missing ${PASSANT_SPRITE_PATH} and Royal Arms reference PNG; run trace-passant-lion.mjs once with the reference asset present.`,
+    `Missing ${PASSANT_SPRITE_PATH} and ${ROYAL_ARMS_SVG}; add royal-arms-reference.svg or run trace-passant-lion.mjs.`,
   )
 } else {
   console.log('Using existing passant-guardant-sprite.svg')
@@ -271,8 +269,13 @@ if (fs.existsSync(ROYAL_ARMS_PNG)) {
 
 const passantSpriteSvg = fs.readFileSync(PASSANT_SPRITE_PATH, 'utf8')
 const passantSpriteRects = loadPassantSpriteRects(passantSpriteSvg)
+const spriteViewBox = passantSpriteSvg.match(
+  /viewBox="0 0 (\d+(?:\.\d+)?) (\d+(?:\.\d+)?)"/,
+)
+const spriteW = spriteViewBox ? Number(spriteViewBox[1]) : boundsFromRects(passantSpriteRects).maxX
+const spriteH = spriteViewBox ? Number(spriteViewBox[2]) : boundsFromRects(passantSpriteRects).maxY
 console.log(
-  `Loaded passant-guardant sprite: ${passantSpriteRects.length} rects`,
+  `Loaded passant-guardant sprite: ${passantSpriteRects.length} rects (${spriteW}x${spriteH})`,
 )
 
 const crestPath = path.join(rootDir, crestSource)
@@ -310,7 +313,11 @@ const leafRects = offsetRects(
   CREST_OFFSET_X,
   CREST_OFFSET_Y,
 )
-const threeLionRects = generateThreePassantLions(passantSpriteRects)
+const threeLionRects = generateThreePassantLions(
+  passantSpriteRects,
+  spriteW,
+  spriteH,
+)
 const garbRectsById = Object.fromEntries(
   Object.entries(GARB_GROUPS).map(([key, groupId]) => [
     key,

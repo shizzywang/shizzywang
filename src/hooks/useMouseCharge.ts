@@ -15,6 +15,13 @@ const TRIGGER_PROB_MAX = 0.38
 const COOLDOWN_MS_MIN = 1000
 const COOLDOWN_MS_MAX = 1500
 
+// Touch / no-hover: occasional ambient bursts (same flicker, sparse timing)
+const AMBIENT_FIRST_MS_MIN = 6000
+const AMBIENT_FIRST_MS_MAX = 12000
+const AMBIENT_GAP_MS_MIN = 14000
+const AMBIENT_GAP_MS_MAX = 28000
+const AMBIENT_VELOCITY = 0.35
+
 const FLICKER_COUNT_MIN = 2
 const FLICKER_COUNT_MAX = 4
 const FLICKER_ON_MS_MIN = 30
@@ -106,7 +113,9 @@ export function useMouseCharge({ enabled }: UseMouseChargeOptions) {
 
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
   const canHover = useMediaQuery('(hover: hover)')
-  const active = enabled && !reducedMotion && canHover
+  const active = enabled && !reducedMotion
+  const usePointer = active && canHover
+  const useAmbient = active && !canHover
 
   const lastX = useRef<number | null>(null)
   const lastY = useRef<number | null>(null)
@@ -116,6 +125,7 @@ export function useMouseCharge({ enabled }: UseMouseChargeOptions) {
   const cooldownUntil = useRef(0)
   const burst = useRef<BurstState | null>(null)
   const rafId = useRef<number | null>(null)
+  const ambientTimeoutId = useRef<number | null>(null)
   const lastTick = useRef<number | null>(null)
   const lastOpacity = useRef(0)
   const hasPointer = useRef(false)
@@ -186,6 +196,16 @@ export function useMouseCharge({ enabled }: UseMouseChargeOptions) {
       lastTime.current = now
     }
 
+    const scheduleAmbient = (delayMs: number) => {
+      ambientTimeoutId.current = window.setTimeout(() => {
+        ambientTimeoutId.current = null
+        if (!burst.current) {
+          startBurst(AMBIENT_VELOCITY, performance.now())
+        }
+        scheduleAmbient(randBetween(AMBIENT_GAP_MS_MIN, AMBIENT_GAP_MS_MAX))
+      }, delayMs)
+    }
+
     const tick = (now: number) => {
       const dt = lastTick.current !== null ? now - lastTick.current : 0
       lastTick.current = now
@@ -229,11 +249,22 @@ export function useMouseCharge({ enabled }: UseMouseChargeOptions) {
       rafId.current = requestAnimationFrame(tick)
     }
 
-    window.addEventListener('pointermove', onPointerMove, { passive: true })
+    if (usePointer) {
+      window.addEventListener('pointermove', onPointerMove, { passive: true })
+    } else if (useAmbient) {
+      scheduleAmbient(randBetween(AMBIENT_FIRST_MS_MIN, AMBIENT_FIRST_MS_MAX))
+    }
+
     rafId.current = requestAnimationFrame(tick)
 
     return () => {
-      window.removeEventListener('pointermove', onPointerMove)
+      if (usePointer) {
+        window.removeEventListener('pointermove', onPointerMove)
+      }
+      if (ambientTimeoutId.current !== null) {
+        window.clearTimeout(ambientTimeoutId.current)
+        ambientTimeoutId.current = null
+      }
       if (rafId.current !== null) {
         cancelAnimationFrame(rafId.current)
       }
@@ -247,7 +278,7 @@ export function useMouseCharge({ enabled }: UseMouseChargeOptions) {
       lastOpacity.current = 0
       hasPointer.current = false
     }
-  }, [active])
+  }, [active, usePointer, useAmbient])
 
   return { pulseOpacity, burstActive }
 }

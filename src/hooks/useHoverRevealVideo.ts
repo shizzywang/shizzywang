@@ -26,7 +26,8 @@ export function useHoverRevealVideo(active: boolean, isWarm: boolean) {
     videoRevealedRef.current = false
     setVideoExiting(false)
     setVideoWarmReveal(isWarm)
-    setVideoFallbackVisible(!isWarm)
+    // Always show poster immediately so hover never looks blank.
+    setVideoFallbackVisible(true)
 
     const reveal = () => {
       if (!cancelled) {
@@ -37,13 +38,11 @@ export function useHoverRevealVideo(active: boolean, isWarm: boolean) {
     }
 
     const onPlaying = () => {
-      if (!cancelled) {
-        setVideoFallbackVisible(false)
-      }
       if (reducedMotion) {
         reveal()
         return
       }
+      // Keep poster visible until the first decoded frame paints.
       revealAfterFirstFrame(video, reveal)
     }
 

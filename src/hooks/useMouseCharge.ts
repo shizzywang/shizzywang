@@ -15,12 +15,17 @@ const TRIGGER_PROB_MAX = 0.38
 const COOLDOWN_MS_MIN = 1000
 const COOLDOWN_MS_MAX = 1500
 
-// Touch / no-hover: occasional ambient bursts (same flicker, sparse timing)
-const AMBIENT_FIRST_MS_MIN = 6000
-const AMBIENT_FIRST_MS_MAX = 12000
-const AMBIENT_GAP_MS_MIN = 14000
-const AMBIENT_GAP_MS_MAX = 28000
-const AMBIENT_VELOCITY = 0.35
+// Touch / no-hover: same flicker, front-loaded then sparse
+// Pattern: quick hit → second soon → quiet stretch → occasional
+const AMBIENT_FIRST_MS_MIN = 900
+const AMBIENT_FIRST_MS_MAX = 1800
+const AMBIENT_SECOND_MS_MIN = 2200
+const AMBIENT_SECOND_MS_MAX = 4000
+const AMBIENT_QUIET_MS_MIN = 10000
+const AMBIENT_QUIET_MS_MAX = 16000
+const AMBIENT_LATER_MS_MIN = 12000
+const AMBIENT_LATER_MS_MAX = 22000
+const AMBIENT_VELOCITY = 0.55
 
 const FLICKER_COUNT_MIN = 2
 const FLICKER_COUNT_MAX = 4
@@ -196,13 +201,23 @@ export function useMouseCharge({ enabled }: UseMouseChargeOptions) {
       lastTime.current = now
     }
 
-    const scheduleAmbient = (delayMs: number) => {
+    const scheduleAmbient = (delayMs: number, nextIndex: number) => {
       ambientTimeoutId.current = window.setTimeout(() => {
         ambientTimeoutId.current = null
         if (!burst.current) {
           startBurst(AMBIENT_VELOCITY, performance.now())
         }
-        scheduleAmbient(randBetween(AMBIENT_GAP_MS_MIN, AMBIENT_GAP_MS_MAX))
+
+        let nextDelay: number
+        if (nextIndex === 1) {
+          nextDelay = randBetween(AMBIENT_SECOND_MS_MIN, AMBIENT_SECOND_MS_MAX)
+        } else if (nextIndex === 2) {
+          nextDelay = randBetween(AMBIENT_QUIET_MS_MIN, AMBIENT_QUIET_MS_MAX)
+        } else {
+          nextDelay = randBetween(AMBIENT_LATER_MS_MIN, AMBIENT_LATER_MS_MAX)
+        }
+
+        scheduleAmbient(nextDelay, nextIndex + 1)
       }, delayMs)
     }
 
@@ -252,7 +267,10 @@ export function useMouseCharge({ enabled }: UseMouseChargeOptions) {
     if (usePointer) {
       window.addEventListener('pointermove', onPointerMove, { passive: true })
     } else if (useAmbient) {
-      scheduleAmbient(randBetween(AMBIENT_FIRST_MS_MIN, AMBIENT_FIRST_MS_MAX))
+      scheduleAmbient(
+        randBetween(AMBIENT_FIRST_MS_MIN, AMBIENT_FIRST_MS_MAX),
+        0,
+      )
     }
 
     rafId.current = requestAnimationFrame(tick)

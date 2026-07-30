@@ -19,49 +19,48 @@ type WindowWithIdleCallback = Window & {
   cancelIdleCallback?: (handle: IdleCallbackHandle) => void
 }
 
+function parkAtFirstFrame(video: HTMLVideoElement) {
+  if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
+  // Never interrupt an in-progress hover play().
+  if (!video.paused) return
+  try {
+    if (video.currentTime > 0.05) video.currentTime = 0
+  } catch {
+    // Ignore seek errors on freshly loaded media.
+  }
+}
+
 export function useLandingVideoWarmup({
   sources,
-  delayMs = 1600,
+  delayMs = 500,
 }: UseLandingVideoWarmupOptions) {
   const videosRef = useRef<VideoMap>({})
   const [warmMap, setWarmMap] = useState<WarmMap>({})
   const warmupInFlightRef = useRef<Record<string, boolean>>({})
+  const hardLoadedRef = useRef<Record<string, boolean>>({})
 
   const setWarm = useCallback((src: string) => {
     setWarmMap((prev) => (prev[src] ? prev : { ...prev, [src]: true }))
   }, [])
 
-  const ensureWarm = useCallback(
-    (src: string) => {
-      const video = videosRef.current[src]
-      if (!video) return
-
-      // Fast path: already buffered enough.
-      if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
-        setWarm(src)
-        return
-      }
-
-      // Avoid stacking repeated warmup work during rapid pointer movement.
+  const attachWarmListeners = useCallback(
+    (src: string, video: HTMLVideoElement) => {
       if (warmupInFlightRef.current[src]) return
       warmupInFlightRef.current[src] = true
 
       const maybeSetWarm = () => {
-        if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) setWarm(src)
+        if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+          parkAtFirstFrame(video)
+        }
+        if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+          setWarm(src)
+        }
         warmupInFlightRef.current[src] = false
       }
 
-      const onCanPlay = () => maybeSetWarm()
-      const onLoadedData = () => maybeSetWarm()
+      video.addEventListener('canplay', maybeSetWarm, { once: true })
+      video.addEventListener('loadeddata', maybeSetWarm, { once: true })
 
-      video.addEventListener('canplay', onCanPlay, { once: true })
-      video.addEventListener('loadeddata', onLoadedData, { once: true })
-
-      // Kick the buffering pipeline without playing (playing can fight hover reveal).
-      video.preload = 'auto'
-      video.load()
-
-      // Safety: if events never fire, don't keep the in-flight flag forever.
       window.setTimeout(() => {
         warmupInFlightRef.current[src] = false
       }, 6000)
@@ -69,19 +68,57 @@ export function useLandingVideoWarmup({
     [setWarm],
   )
 
-  const warmVideo = useCallback(
-    (src: string) => {
-      ensureWarm(src)
-    },
-    [ensureWarm],
-  )
-
+  /** Soft warm: never reset the element — only ensure preload is on. */
   const nudgeWarmup = useCallback(
     (src: string) => {
-      // Intent warmup must be non-destructive: never seek/pause/reset the element.
-      ensureWarm(src)
+      const video = videosRef.current[src]
+      if (!video) return
+
+      if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+        setWarm(src)
+        return
+      }
+
+      video.preload = 'auto'
+
+      const alreadyLoading =
+        video.readyState > HTMLMediaElement.HAVE_NOTHING ||
+        video.networkState === HTMLMediaElement.NETWORK_LOADING
+
+      if (alreadyLoading) {
+        attachWarmListeners(src, video)
+        return
+      }
+
+      // Nothing started yet: soft nudge still avoids load() — idle hard warm will kick.
+      attachWarmListeners(src, video)
     },
-    [ensureWarm],
+    [attachWarmListeners, setWarm],
+  )
+
+  /** Hard warm: call load() only once when the element has never started. */
+  const warmVideo = useCallback(
+    (src: string) => {
+      const video = videosRef.current[src]
+      if (!video) return
+
+      if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+        setWarm(src)
+        return
+      }
+
+      video.preload = 'auto'
+      attachWarmListeners(src, video)
+
+      if (
+        video.readyState === HTMLMediaElement.HAVE_NOTHING &&
+        !hardLoadedRef.current[src]
+      ) {
+        hardLoadedRef.current[src] = true
+        video.load()
+      }
+    },
+    [attachWarmListeners, setWarm],
   )
 
   const registerVideo = useCallback(

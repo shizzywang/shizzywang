@@ -28,6 +28,7 @@ export function LandingPage() {
   })
   const { registerVideo, isWarm, nudgeWarmup } = useLandingVideoWarmup({
     sources: [BRITANNIA_SRC, STACK_SRC],
+    delayMs: 500,
   })
 
   return (
